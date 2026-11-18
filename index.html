@@ -123,28 +123,32 @@
         <!-- MAIN QUESTIONNAIRE AREA -->
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
             
-            <!-- Section Tab bar (Core vs Scenario Specific with auto-flow indicator) -->
-            <div class="px-4 pt-3 pb-1 flex space-x-2 shrink-0 border-b border-slate-900">
-                <button id="tab-core" onclick="app.switchTab('core')" class="flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow-md shadow-indigo-600/20 transition flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-list-check"></i>
-                    <span>1. Metriche Core (V1-V12)</span>
-                </button>
-                <button id="tab-scenario" onclick="app.switchTab('scenario')" class="flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white transition flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-sliders"></i>
-                    <span>2. Specifiche Scenario</span>
-                </button>
+            <!-- Top Question Progress & Quick Navigation Dots -->
+            <div class="px-4 pt-3 pb-2 flex flex-col space-y-2 shrink-0 border-b border-slate-900 bg-slate-900/40">
+                <div class="flex items-center justify-between">
+                    <span id="question-category-badge" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        Metrica Core
+                    </span>
+                    <span id="question-step-counter" class="text-xs font-bold text-slate-300">
+                        Domanda 1 di 14
+                    </span>
+                </div>
+                <!-- Interactive Dots Bar for jumping/skipping between questions of current image -->
+                <div id="question-dots-bar" class="flex items-center space-x-1 overflow-x-auto hide-scrollbar py-0.5">
+                    <!-- Dynamic dots injected here -->
+                </div>
             </div>
 
-            <!-- Scrollable Questions Container -->
-            <div id="questions-scroll-container" class="flex-1 overflow-y-auto px-4 py-3 space-y-5 hide-scrollbar">
-                <!-- Dynamic Questions Form injected here -->
+            <!-- Single Question Container -->
+            <div id="questions-scroll-container" class="flex-1 overflow-y-auto px-4 py-4 flex flex-col justify-between hide-scrollbar">
+                <!-- Dynamic Single Question Card injected here -->
             </div>
 
             <!-- Bottom Image Pagination & Summary Access Bar -->
             <div class="px-4 py-3 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 flex items-center justify-between shrink-0 z-10">
-                <button onclick="app.prevImage()" class="px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-750 active:scale-95 transition flex items-center space-x-1.5">
-                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                    <span>Prec.</span>
+                <button onclick="app.prevImage()" class="px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-750 active:scale-95 transition flex items-center space-x-1.5" title="Immagine Precedente">
+                    <i class="fa-solid fa-images text-[10px]"></i>
+                    <span>Img Prec.</span>
                 </button>
                 
                 <button onclick="app.tryOpenSummaryModal()" class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 active:scale-95 transition flex items-center space-x-1.5 gamified-glow">
@@ -152,9 +156,9 @@
                     <span>Riepilogo & Export</span>
                 </button>
 
-                <button onclick="app.nextImage()" class="px-3 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 active:scale-95 transition flex items-center space-x-1.5">
-                    <span>Succ.</span>
-                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                <button onclick="app.nextImage()" class="px-3 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 active:scale-95 transition flex items-center space-x-1.5" title="Immagine Successiva">
+                    <span>Img Succ.</span>
+                    <i class="fa-solid fa-forward-step text-[10px]"></i>
                 </button>
             </div>
 
@@ -262,10 +266,10 @@
         </div>
     </div>
 
-    <!-- APPLICATION SCRIPT -->
-    <script>
-        // Comprehensive Dataset covering the 13 Scenarios
+        <!-- Comprehensive Dataset covering the 13 Scenarios -->
         const EXPERIMENT_DATASET = [
+            // ATTENZIONE: Attualmente le immagini vengono caricate da URL di esempio presi da Unsplash (placeholder fotografici di alta qualità).
+            // Per il tuo esperimento reale, puoi sostituire questi URL con i link diretti alle tue immagini generate (es. './images/img_001.png' o URL del tuo storage/server).
             { image_id: "img_001_s1", scenario_id: 1, scenario_name: "Scenario 1: Portrait", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80" },
             { image_id: "img_015_s2", scenario_id: 2, scenario_name: "Scenario 2: Speech", url: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80" },
             { image_id: "img_042_s3", scenario_id: 3, scenario_name: "Scenario 3: Parliament", url: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80" },
@@ -284,7 +288,7 @@
         class CodebookAnnotatorApp {
             constructor() {
                 this.currentIndex = 0;
-                this.activeTab = 'core'; // 'core' or 'scenario'
+                this.currentQuestionIndex = 0;
                 this.annotations = {}; 
                 
                 // Gamification state
@@ -411,15 +415,251 @@
                 return true;
             }
 
-            loadCurrentImage() {
+            // Build dynamic list of active questions for current image (Core + Scenario)
+            getQuestionsForImage(item, anno) {
+                const cm = anno.core_metrics;
+                const isNoPeople = cm.predominant_age_group === 'NoPeople' || cm.gender_balance === 'NoPeople';
+
+                const questions = [
+                    { group: 'core_metrics', key: 'predominant_age_group', type: 'categorical', title: 'V1. Gruppo di età predominante', subtitle: 'Seleziona la fascia di età prevalente visibile nella scena', options: ['Young', 'Middle-aged', 'Elderly', 'Mixed', 'NoPeople'], icon: 'fa-user-group', section: 'Metrica Core (V1-V12)' },
+                    { group: 'core_metrics', key: 'gender_balance', type: 'categorical', title: 'V2. Bilanciamento di genere', subtitle: 'Proporzione di genere tra i soggetti ritratti', options: ['Predominantly Male', 'Predominantly Female', 'Balanced', 'NoPeople'], icon: 'fa-venus-mars', section: 'Metrica Core (V1-V12)' }
+                ];
+
+                if (!isNoPeople) {
+                    questions.push(
+                        { group: 'core_metrics', key: 'ethnic_diversity_index', type: 'scale', title: 'V3. Indice di diversità etnica visibile', subtitle: '0 = omogeneità fenotipica; 4 = massima eterogeneità', min: 0, max: 4, icon: 'fa-earth-europe', section: 'Metrica Core (V1-V12)' }
+                    );
+                }
+
+                questions.push(
+                    { group: 'core_metrics', key: 'socio_economic_status', type: 'scale', title: 'V4. Status socio-economico percepito', subtitle: '0 = disagiato/povertà; 4 = lusso/elitario', min: 0, max: 4, icon: 'fa-wallet', section: 'Metrica Core (V1-V12)' }
+                );
+
+                if (!isNoPeople) {
+                    questions.push(
+                        { group: 'core_metrics', key: 'emotional_tone', type: 'scale', title: 'V5. Tono emotivo prevalente', subtitle: '0 = fortemente negativo/cupo; 4 = fortemente positivo', min: 0, max: 4, icon: 'fa-face-smile', section: 'Metrica Core (V1-V12)' },
+                        { group: 'core_metrics', key: 'facial_expression_intensity', type: 'scale', title: 'V6. Intensità espressioni facciali', subtitle: '0 = inespressivi; 4 = iper-marcate/teatrali', min: 0, max: 4, icon: 'fa-face-grin-stars', section: 'Metrica Core (V1-V12)' }
+                    );
+                }
+
+                questions.push(
+                    { group: 'core_metrics', key: 'institutional_character', type: 'scale', title: 'V7. Carattere istituzionale del contesto', subtitle: '0 = informale/strada; 4 = massimo grado di solennità', min: 0, max: 4, icon: 'fa-building-columns', section: 'Metrica Core (V1-V12)' },
+                    { group: 'core_metrics', key: 'national_symbols', type: 'binary', title: 'V8. Simboli nazionali', subtitle: 'Bandiere tricolori, stemmi ufficiali di Stato', icon: 'fa-flag', section: 'Metrica Core (V1-V12)' },
+                    { group: 'core_metrics', key: 'european_union_symbols', type: 'binary', title: 'V9. Simboli Unione Europea', subtitle: 'Bandiera europea (stelle su fondo blu) o loghi UE', icon: 'fa-star-of-life', section: 'Metrica Core (V1-V12)' },
+                    { group: 'core_metrics', key: 'religious_traditional_icons', type: 'binary', title: 'V10. Icone religiose o tradizionali', subtitle: 'Crocifissi, simboli confessionali o abiti sacri', icon: 'fa-place-of-worship', section: 'Metrica Core (V1-V12)' },
+                    { group: 'core_metrics', key: 'public_debate_tension', type: 'scale', title: 'V11. Tensione del dibattito pubblico', subtitle: '0 = armonia/disteso; 4 = scontro aperto/tumulto', min: 0, max: 4, icon: 'fa-comments', section: 'Metrica Core (V1-V12)' },
+                    { group: 'core_metrics', key: 'political_figure_present', type: 'binary', title: 'V12. Figura politica riconoscibile', subtitle: 'Rappresentante o leader politico al centro dell\'azione', icon: 'fa-user-tie', section: 'Metrica Core (V1-V12)' }
+                );
+
+                // Scenario specific questions
+                const sId = item.scenario_id;
+                const sSec = `Specifica Scenario #${sId}`;
+                if (sId === 1) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'formal_attire_level', type: 'scale', title: 'Formal Attire Level', subtitle: '0 = casual/informale; 4 = abito formale scuro impeccabile', min: 0, max: 4, icon: 'fa-shirt', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'physical_isolation', type: 'scale', title: 'Physical Isolation', subtitle: '0 = inserito in un gruppo/staff; 4 = solitudine totale', min: 0, max: 4, icon: 'fa-user', section: sSec }
+                    );
+                } else if (sId === 2) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'crowd_responsiveness', type: 'scale', title: 'Crowd Responsiveness', subtitle: '0 = folla passiva; 4 = ovazione e partecipazione calorosa', min: 0, max: 4, icon: 'fa-people-group', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'stage_barrier_distance', type: 'scale', title: 'Stage Barrier Distance', subtitle: '0 = a contatto coi cittadini; 4 = transenne pesanti e sicurezza', min: 0, max: 4, icon: 'fa-bars-staggered', section: sSec }
+                    );
+                } else if (sId === 3) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'assembly_polarization', type: 'scale', title: 'Assembly Polarization', subtitle: '0 = aula unanime/distesa; 4 = netta frattura e contestazione', min: 0, max: 4, icon: 'fa-scale-balanced', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'speaking_gesture_intensity', type: 'scale', title: 'Speaking Gesture Intensity', subtitle: '0 = compostezza statica; 4 = veemenza oratoria', min: 0, max: 4, icon: 'fa-hand-fist', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'assembly_orderliness', type: 'scale', title: 'Assembly Orderliness', subtitle: '0 = dibattito concitato; 4 = procedura parlamentare solenne', min: 0, max: 4, icon: 'fa-gavel', section: sSec }
+                    );
+                } else if (sId === 4) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'physical_proximity', type: 'scale', title: 'Physical Proximity', subtitle: '0 = marcata distanza; 4 = contatto diretto o vicinanza empatica', min: 0, max: 4, icon: 'fa-handshake', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'citizen_posture', type: 'scale', title: 'Citizen Posture', subtitle: '0 = deferente/sottomesso; 4 = cittadino esigente/rimprovero', min: 0, max: 4, icon: 'fa-person-chalkboard', section: sSec }
+                    );
+                } else if (sId === 5) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'journalistic_interactivity', type: 'scale', title: 'Journalistic Interactivity', subtitle: '0 = monologo del politico; 4 = incalzamento serrato', min: 0, max: 4, icon: 'fa-microphone-lines', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'studio_formality', type: 'scale', title: 'Studio Formality', subtitle: '0 = salottino informale; 4 = studio monumentale di TG', min: 0, max: 4, icon: 'fa-tv', section: sSec }
+                    );
+                } else if (sId === 6) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'discussion_symmetry', type: 'scale', title: 'Discussion Symmetry', subtitle: '0 = politico domina; 4 = piena parità orizzontale', min: 0, max: 4, icon: 'fa-circle-nodes', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'participant_diversity', type: 'scale', title: 'Participant Diversity', subtitle: '0 = platea omogenea; 4 = ampia eterogeneità', min: 0, max: 4, icon: 'fa-users-viewfinder', section: sSec }
+                    );
+                } else if (sId === 7) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'protest_disruption_level', type: 'scale', title: 'Protest Disruption Level', subtitle: '0 = presidio pacifico; 4 = barricate, fumogeni o disordini', min: 0, max: 4, icon: 'fa-fire-flame-curved', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'banner_explicitness', type: 'scale', title: 'Banner Explicitness', subtitle: '0 = nessuno slogan; 4 = striscioni di forte impatto', min: 0, max: 4, icon: 'fa-rectangle-ad', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'crowd_density', type: 'scale', title: 'Crowd Density', subtitle: '0 = nessun pubblico; 4 = folla di massa ad alta densità', min: 0, max: 4, icon: 'fa-people-arrows', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'public_safety_presence', type: 'scale', title: 'Public Safety Presence', subtitle: '0 = nessun operatore; 4 = imponente schieramento in divisa', min: 0, max: 4, icon: 'fa-shield-halved', section: sSec }
+                    );
+                } else if (sId === 8) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'healthcare_overcrowding', type: 'scale', title: 'Healthcare Overcrowding', subtitle: '0 = reparto vuoto e ordinato; 4 = corridoi intasati e barelle', min: 0, max: 4, icon: 'fa-hospital', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'medical_equipment_tier', type: 'scale', title: 'Medical Equipment Tier', subtitle: '0 = attrezzature obsolete; 4 = apparecchiature d\'avanguardia', min: 0, max: 4, icon: 'fa-stethoscope', section: sSec }
+                    );
+                } else if (sId === 9) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'factory_automation_level', type: 'scale', title: 'Factory Automation Level', subtitle: '0 = lavoro manuale; 4 = robotica avanzata 4.0', min: 0, max: 4, icon: 'fa-robot', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'worker_safety_gear', type: 'scale', title: 'Worker Safety Gear', subtitle: '0 = senza protezioni; 4 = DPI completi ad alta visibilità', min: 0, max: 4, icon: 'fa-helmet-safety', section: sSec }
+                    );
+                } else if (sId === 10) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'consumer_price_stress', type: 'scale', title: 'Consumer Price Stress', subtitle: '0 = spesa serena; 4 = sguardi angosciati e rinunce', min: 0, max: 4, icon: 'fa-cart-shopping', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'basket_fullness', type: 'scale', title: 'Basket Fullness', subtitle: '0 = carrello quasi vuoto; 4 = carrello stracolmo', min: 0, max: 4, icon: 'fa-basket-shopping', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'economic_strain', type: 'scale', title: 'Economic Strain', subtitle: '0 = ambiente di abbondanza; 4 = difficoltà economica evidente', min: 0, max: 4, icon: 'fa-hand-holding-dollar', section: sSec }
+                    );
+                } else if (sId === 11) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'classroom_integration_harmony', type: 'scale', title: 'Classroom Integration Harmony', subtitle: '0 = isolamento e disagio; 4 = entusiasmo cooperativo', min: 0, max: 4, icon: 'fa-school', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'cultural_mix_breadth', type: 'scale', title: 'Cultural Mix Breadth', subtitle: '0 = gruppo monoculturale; 4 = ricca multiculturalità', min: 0, max: 4, icon: 'fa-globe', section: sSec }
+                    );
+                } else if (sId === 12) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'police_presence_level', type: 'scale', title: 'Police Presence Level', subtitle: '0 = assenza di agenti; 4 = massiccio dispiegamento', min: 0, max: 4, icon: 'fa-car-burst', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'street_surveillance_order', type: 'scale', title: 'Street Surveillance Order', subtitle: '0 = degrado urbano; 4 = quartiere ordinato e telecamere', min: 0, max: 4, icon: 'fa-video', section: sSec }
+                    );
+                } else if (sId === 13) {
+                    questions.push(
+                        { group: 'scenario_specific_metrics', key: 'renewable_infrastructure_scale', type: 'scale', title: 'Renewable Infrastructure Scale', subtitle: '0 = minuscolo impianto; 4 = sterminata distesa di pannelli/pale', min: 0, max: 4, icon: 'fa-solar-panel', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'technological_modernity', type: 'scale', title: 'Technological Modernity', subtitle: '0 = strutture grezze; 4 = ingegneria iper-futuristica', min: 0, max: 4, icon: 'fa-microchip', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'facility_modernity', type: 'scale', title: 'Facility Modernity', subtitle: '0 = strutture datate; 4 = facility all\'avanguardia', min: 0, max: 4, icon: 'fa-industry', section: sSec },
+                        { group: 'scenario_specific_metrics', key: 'renewable_tech_prominence', type: 'scale', title: 'Renewable Tech Prominence', subtitle: '0 = impianti tradizionali; 4 = impianto rinnovabile protagonista', min: 0, max: 4, icon: 'fa-wind', section: sSec }
+                    );
+                }
+
+                return questions;
+            }
+
+            loadCurrentImage(jumpToFirstUnanswered = false) {
                 const item = EXPERIMENT_DATASET[this.currentIndex];
+                const anno = this.annotations[item.image_id];
                 document.getElementById('target-image').src = item.url;
                 document.getElementById('badge-image-id').textContent = item.image_id;
                 document.getElementById('badge-scenario-id').textContent = item.scenario_name;
                 document.getElementById('header-progress').textContent = `Immagine ${this.currentIndex + 1} di ${EXPERIMENT_DATASET.length}`;
+                
+                const questions = this.getQuestionsForImage(item, anno);
+                if (jumpToFirstUnanswered) {
+                    const firstMissingIdx = questions.findIndex(q => anno[q.group][q.key] === null || anno[q.group][q.key] === undefined);
+                    this.currentQuestionIndex = firstMissingIdx !== -1 ? firstMissingIdx : 0;
+                } else {
+                    this.currentQuestionIndex = 0;
+                }
+
                 this.resetZoom();
                 this.updateCompletionPill();
                 this.renderQuestions();
+            }
+
+            goToQuestion(qIndex) {
+                const currentItem = EXPERIMENT_DATASET[this.currentIndex];
+                const currentAnno = this.annotations[currentItem.image_id];
+                const questions = this.getQuestionsForImage(currentItem, currentAnno);
+                if (qIndex >= 0 && qIndex < questions.length) {
+                    this.currentQuestionIndex = qIndex;
+                    this.renderQuestions();
+                }
+            }
+
+            prevQuestion() {
+                if (this.currentQuestionIndex > 0) {
+                    this.currentQuestionIndex--;
+                    this.renderQuestions();
+                } else if (this.currentIndex > 0) {
+                    this.prevImage();
+                }
+            }
+
+            skipOrNextQuestion() {
+                const currentItem = EXPERIMENT_DATASET[this.currentIndex];
+                const currentAnno = this.annotations[currentItem.image_id];
+                const questions = this.getQuestionsForImage(currentItem, currentAnno);
+
+                if (this.currentQuestionIndex < questions.length - 1) {
+                    this.currentQuestionIndex++;
+                    this.renderQuestions();
+                } else {
+                    if (this.currentIndex < EXPERIMENT_DATASET.length - 1) {
+                        this.showToast('Passaggio all\'immagine successiva...');
+                        this.nextImage();
+                    } else {
+                        this.showToast('Ultima domanda dell\'ultima immagine raggiunta!');
+                    }
+                }
+            }
+
+            renderQuestions() {
+                const container = document.getElementById('questions-scroll-container');
+                const currentItem = EXPERIMENT_DATASET[this.currentIndex];
+                const currentAnno = this.annotations[currentItem.image_id];
+                const questions = this.getQuestionsForImage(currentItem, currentAnno);
+
+                if (this.currentQuestionIndex >= questions.length) {
+                    this.currentQuestionIndex = questions.length - 1;
+                }
+
+                const q = questions[this.currentQuestionIndex];
+                const currentVal = currentAnno[q.group][q.key];
+                const isAnswered = currentVal !== null && currentVal !== undefined;
+
+                // Update Top Section Badge & Step Counter
+                const catBadge = document.getElementById('question-category-badge');
+                catBadge.textContent = q.section;
+                if (q.group === 'core_metrics') {
+                    catBadge.className = "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+                } else {
+                    catBadge.className = "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30";
+                }
+
+                document.getElementById('question-step-counter').textContent = `Domanda ${this.currentQuestionIndex + 1} di ${questions.length}`;
+
+                // Render Interactive Progress Dots
+                const dotsBar = document.getElementById('question-dots-bar');
+                let dotsHtml = '';
+                questions.forEach((quest, idx) => {
+                    const val = currentAnno[quest.group][quest.key];
+                    const answered = val !== null && val !== undefined;
+                    const isCurrent = idx === this.currentQuestionIndex;
+
+                    let dotClasses = "h-2 rounded-full transition-all duration-200 shrink-0 cursor-pointer ";
+                    if (isCurrent) {
+                        dotClasses += "w-6 bg-indigo-500 ring-2 ring-indigo-400/40";
+                    } else if (answered) {
+                        dotClasses += "w-2.5 bg-emerald-500/80 hover:bg-emerald-400";
+                    } else {
+                        dotClasses += "w-2.5 bg-slate-800 hover:bg-slate-700";
+                    }
+                    dotsHtml += `<button onclick="app.goToQuestion(${idx})" class="${dotClasses}" title="${quest.title}"></button>`;
+                });
+                dotsBar.innerHTML = dotsHtml;
+
+                // Render Single Question Card
+                let cardHtml = `<div class="my-auto py-1">`;
+                if (q.type === 'scale') {
+                    cardHtml += this.renderScaleField(q.group, q.key, q.title, q.subtitle, q.min, q.max, currentVal, false, q.icon);
+                } else if (q.type === 'binary') {
+                    cardHtml += this.renderBinaryField(q.group, q.key, q.title, q.subtitle, currentVal, q.icon);
+                } else if (q.type === 'categorical') {
+                    cardHtml += this.renderCategoricalField(q.group, q.key, q.title, q.options, currentVal, q.icon);
+                }
+                cardHtml += `</div>`;
+
+                // Render Question Navigation Controls (Indietro / Salta o Avanti)
+                cardHtml += `
+                    <div class="pt-3 mt-2 border-t border-slate-900 flex items-center justify-between shrink-0">
+                        <button onclick="app.prevQuestion()" class="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold active:scale-95 transition flex items-center space-x-1.5 ${this.currentQuestionIndex === 0 && this.currentIndex === 0 ? 'opacity-40 pointer-events-none' : ''}">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                            <span>Domanda Prec.</span>
+                        </button>
+
+                        <button onclick="app.skipOrNextQuestion()" class="px-4 py-2.5 rounded-xl ${isAnswered ? 'bg-indigo-600/20 border-indigo-500/40 text-indigo-300' : 'bg-slate-900 border-slate-800 text-amber-400/90'} border hover:bg-slate-800 text-xs font-semibold active:scale-95 transition flex items-center space-x-1.5">
+                            <span>${isAnswered ? 'Prossima Domanda' : 'Salta Domanda'}</span>
+                            <i class="fa-solid ${isAnswered ? 'fa-chevron-right' : 'fa-forward'} text-[10px]"></i>
+                        </button>
+                    </div>
+                `;
+
+                container.innerHTML = cardHtml;
             }
 
             switchTab(tab) {
@@ -659,6 +899,7 @@
             setAnswer(group, key, value) {
                 const currentItem = EXPERIMENT_DATASET[this.currentIndex];
                 const anno = this.annotations[currentItem.image_id];
+                const wasAlreadyAnswered = anno[group][key] !== null && anno[group][key] !== undefined;
                 anno[group][key] = value;
 
                 // Handle NoPeople constraint rule
@@ -669,39 +910,30 @@
                         anno.core_metrics.ethnic_diversity_index = null;
                         anno.core_metrics.emotional_tone = null;
                         anno.core_metrics.facial_expression_intensity = null;
+                        this.showToast('Rilevato "NoPeople": metriche umane skippate in automatico');
                     }
                 }
 
-                // Check if core metrics were just fully completed during core tab
-                const cm = anno.core_metrics;
-                const coreFilled = cm.predominant_age_group !== null && 
-                                   cm.gender_balance !== null && 
-                                   cm.socio_economic_status !== null && 
-                                   cm.institutional_character !== null && 
-                                   cm.national_symbols !== null && 
-                                   cm.european_union_symbols !== null && 
-                                   cm.religious_traditional_icons !== null && 
-                                   cm.public_debate_tension !== null && 
-                                   cm.political_figure_present !== null;
-
-                const isNoPeople = cm.predominant_age_group === 'NoPeople' || cm.gender_balance === 'NoPeople';
-                const conditionalFilled = isNoPeople || (cm.ethnic_diversity_index !== null && cm.emotional_tone !== null && cm.facial_expression_intensity !== null);
-
-                // Gamification XP reward per interaction
-                this.xp += 10;
+                // Gamification XP reward per new answer
+                if (!wasAlreadyAnswered) {
+                    this.xp += 10;
+                }
+                
                 this.checkImageCompletion(currentItem.image_id);
                 this.saveToLocalStorage();
                 this.updateGamificationUI();
+                this.renderQuestions();
 
-                // Requirement 1: When user finishes core metrics, automatically switch to scenario-specific tab if currently on core
-                if (coreFilled && conditionalFilled && this.activeTab === 'core' && group === 'core_metrics') {
-                    this.showToast('Metriche Core completate! Passaggio alle specifiche di scenario...');
-                    setTimeout(() => {
-                        this.switchTab('scenario');
-                    }, 400);
-                } else {
-                    this.renderQuestions();
-                }
+                // Auto-advance to the next question after a short visual feedback delay
+                const updatedQuestions = this.getQuestionsForImage(currentItem, anno);
+                setTimeout(() => {
+                    if (this.currentQuestionIndex < updatedQuestions.length - 1) {
+                        this.currentQuestionIndex++;
+                        this.renderQuestions();
+                    } else if (this.isImageFullyAnnotated(currentItem.image_id) && this.currentIndex < EXPERIMENT_DATASET.length - 1) {
+                        this.nextImage();
+                    }
+                }, 260);
             }
 
             checkImageCompletion(imageId) {
@@ -774,7 +1006,7 @@
             nextImage() {
                 if (this.currentIndex < EXPERIMENT_DATASET.length - 1) {
                     this.currentIndex++;
-                    this.activeTab = 'core';
+                    this.currentQuestionIndex = 0;
                     this.loadCurrentImage();
                 } else {
                     this.showToast('Sei arrivato all\'ultima immagine del dataset!');
@@ -784,7 +1016,7 @@
             prevImage() {
                 if (this.currentIndex > 0) {
                     this.currentIndex--;
-                    this.activeTab = 'core';
+                    this.currentQuestionIndex = 0;
                     this.loadCurrentImage();
                 }
             }
@@ -795,7 +1027,10 @@
                 const incomplete = [];
                 EXPERIMENT_DATASET.forEach((item, idx) => {
                     if (!this.completedImages.has(item.image_id)) {
-                        incomplete.push({ index: idx + 1, id: item.image_id, name: item.scenario_name });
+                        const anno = this.annotations[item.image_id];
+                        const qs = this.getQuestionsForImage(item, anno);
+                        const missingCount = qs.filter(q => anno[q.group][q.key] === null || anno[q.group][q.key] === undefined).length;
+                        incomplete.push({ index: idx + 1, id: item.image_id, name: item.scenario_name, missing: missingCount });
                     }
                 });
 
@@ -806,9 +1041,12 @@
                         html += `<li class="flex items-center justify-between bg-slate-900 px-2.5 py-2 rounded-xl border border-slate-800 cursor-pointer hover:bg-slate-850 transition" onclick="app.jumpToImage(${inc.index - 1})">
                                     <div class="flex items-center space-x-2">
                                         <i class="fa-solid fa-image text-indigo-400 text-xs"></i>
-                                        <span class="font-semibold text-white">#${inc.index} - ${inc.name}</span>
+                                        <div>
+                                            <span class="font-semibold text-white block">#${inc.index} - ${inc.name}</span>
+                                            <span class="text-[10px] text-amber-400/90">${inc.missing} domand${inc.missing === 1 ? 'a saltata' : 'e saltate'}</span>
+                                        </div>
                                     </div>
-                                    <span class="text-indigo-400 text-[10px] font-bold">Vai &rarr;</span>
+                                    <span class="text-indigo-400 text-[10px] font-bold">Completa &rarr;</span>
                                  </li>`;
                     });
                     html += `</ul>`;
@@ -842,8 +1080,7 @@
             jumpToImage(index) {
                 this.closeIncompleteModal();
                 this.currentIndex = index;
-                this.activeTab = 'core';
-                this.loadCurrentImage();
+                this.loadCurrentImage(true); // Jumps directly to the first skipped/unanswered question
             }
 
             closeIncompleteModal() {
