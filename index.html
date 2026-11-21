@@ -97,15 +97,9 @@
     </header>
 
     <!-- TOP IMAGE VIEWER (Sticky & Zoomable) -->
-<<<<<<< HEAD
     <div id="image-viewer-container" class="relative w-full bg-slate-900 border-b border-slate-800 overflow-hidden shrink-0 transition-all duration-300" style="height: 27vh; max-height: 280px; min-height: 175px;">
       <div id="canvas-wrapper" class="w-full h-full relative overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing">
         <img id="target-image" src="" class="max-w-full max-h-full transition-transform duration-75 origin-center object-contain select-none pointer-events-none p-1" alt="Immagine Sperimentale">
-=======
-    <div id="image-viewer-container" class="relative w-full h-[65vh] max-h-[650px] bg-slate-900 border-b border-slate-800 overflow-hidden shrink-0 transition-all duration-300" style="height: 42vh;">
-      <div id="canvas-wrapper" class="w-full h-full relative overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing">
-        <img id="target-image" src="" class="max-w-full max-h-full transition-transform duration-75 origin-center object-contain" alt="Immagine Sperimentale">
->>>>>>> 62f5ad86fa73866bab5a612799fe75b47a646e6f
         
         <!-- Fallback message if image is not yet loaded -->
         <div id="image-fallback-msg" class="hidden absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-4 text-center">
@@ -2408,10 +2402,12 @@ class CodebookAnnotatorApp {
     const container = document.getElementById('image-viewer-container');
     const icon = document.getElementById('viewer-toggle-icon');
     if (this.isViewerCollapsed) {
+      container.style.minHeight = '0px';
       container.style.height = '48px';
       icon.className = 'fa-solid fa-chevron-down text-[10px]';
     } else {
-      container.style.height = '42vh';
+      container.style.minHeight = '175px';
+      container.style.height = '27vh';
       icon.className = 'fa-solid fa-chevron-up text-[10px]';
     }
   }
