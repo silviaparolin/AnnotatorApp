@@ -373,7 +373,7 @@
         </button>
         <button onclick="app.exportCSV()" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-emerald-600/30 transition">
           <i class="fa-solid fa-download"></i>
-          <span>Scarica CSV (27 colonne)</span>
+          <span>Scarica CSV</span>
         </button>
       </div>
     </div>
@@ -1554,1060 +1554,963 @@
   }
 ];
 
-    class CodebookAnnotatorApp {
-      constructor() {
-        this.currentIndex = 0;
-        this.currentQuestionIndex = 0;
-        this.annotations = {};
-        this.localImageBlobs = {}; // In-memory map from filename -> blob url
+    const CORE_KEYS_V2 = [
+  "predominant_age_group",
+  "gender_balance",
+  "ethnic_diversity_index",
+  "socio_economic_status",
+  "emotional_tone",
+  "facial_expression_intensity",
+  "institutional_character",
+  "national_symbols",
+  "european_union_symbols",
+  "religious_traditional_icons",
+  "public_debate_tension",
+  "political_figure_present",
+  "non_functional_text_present",
+  "text_literal_framing"
+];
 
-        // Gamification
-        this.xp = 0;
-        this.streak = 0;
-        this.completedImages = new Set();
+const SPECIFIC_KEYS_V2 = [
+  "speaker_gender",
+  "speaker_age",
+  "speaker_attire",
+  "speaker_gesture_intensity",
+  "dominant_political_color_cue",
+  "visible_pins_or_badges",
+  "crowd_density",
+  "facility_modernity",
+  "female_worker_present",
+  "facial_valence",
+  "stage_production_style",
+  "institutional_vs_partisan_framing",
+  "setting_type",
+  "meeting_setting_style",
+  "table_protocol_markers",
+  "wall_visual_elements",
+  "demonstrator_national_flag",
+  "crowd_organization_symbols",
+  "handmade_protest_signs",
+  "foreground_focus_role",
+  "aisle_signage_type",
+  "police_equipment_level",
+  "protest_or_activist_context",
+  "camera_framing_of_police",
+  "printed_national_graphics"
+];
 
-        // Zoom / Pan
-        this.scale = 1;
-        this.pointX = 0;
-        this.pointY = 0;
-        this.isDragging = false;
-        this.startX = 0;
-        this.startY = 0;
-        this.isViewerCollapsed = false;
+class CodebookAnnotatorApp {
+  constructor() {
+    this.currentIndex = 0;
+    this.currentQuestionIndex = 0;
+    this.annotations = {};
+    this.localImageBlobs = {};
 
-        this.loadFromLocalStorage();
-        this.initApp();
-      }
+    // Gamification
+    this.xp = 0;
+    this.streak = 0;
+    this.completedImages = new Set();
 
-      initApp() {
-        EXPERIMENT_DATASET.forEach(item => {
-          if (!this.annotations[item.image_id]) {
-            this.annotations[item.image_id] = {
-              image_id: item.image_id,
-              scenario_id: item.scenario_id,
-              coder_notes: "",
-              core_metrics: {
-                predominant_age_group: null,
-                gender_balance: null,
-                ethnic_diversity_index: null,
-                socio_economic_status: null,
-                emotional_tone: null,
-                facial_expression_intensity: null,
-                institutional_character: null,
-                national_symbols: null,
-                european_union_symbols: null,
-                religious_traditional_icons: null,
-                public_debate_tension: null,
-                political_figure_present: null
-              },
-              scenario_specific_metrics: {}
-            };
-          } else if (this.annotations[item.image_id].coder_notes === undefined) {
-            this.annotations[item.image_id].coder_notes = "";
-          }
-        });
+    // Zoom / Pan
+    this.scale = 1;
+    this.pointX = 0;
+    this.pointY = 0;
+    this.isDragging = false;
+    this.startX = 0;
+    this.startY = 0;
+    this.isViewerCollapsed = false;
 
-        this.recalculateCompletedSet();
-        this.loadCurrentImage();
-        this.setupZoomPanEvents();
-        this.updateGamificationUI();
-        if (this.hasRestoredSession && this.currentIndex > 0) {
-          setTimeout(() => {
-            this.showToast(`Bentornato! Ripristinati i progressi: Immagine ${this.currentIndex + 1} di ${EXPERIMENT_DATASET.length}`);
-          }, 600);
-        }
-      }
+    this.loadFromLocalStorage();
+    this.initApp();
+  }
 
-      loadFromLocalStorage() {
-        try {
-          const saved = localStorage.getItem('annotator_pro_pilot_v2');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            this.annotations = parsed.annotations || {};
-            this.xp = parsed.xp || 0;
-            this.streak = parsed.streak || 0;
-            if (typeof parsed.currentIndex === 'number' && parsed.currentIndex >= 0 && parsed.currentIndex < EXPERIMENT_DATASET.length) {
-              this.currentIndex = parsed.currentIndex;
-            }
-            if (typeof parsed.currentQuestionIndex === 'number' && parsed.currentQuestionIndex >= 0) {
-              this.currentQuestionIndex = parsed.currentQuestionIndex;
-            }
-            this.hasRestoredSession = true;
-          }
-        } catch(e) {
-          console.warn('Errore lettura localStorage:', e);
-        }
-      }
-
-      saveToLocalStorage() {
-        try {
-          const data = {
-            currentIndex: this.currentIndex,
-            currentQuestionIndex: this.currentQuestionIndex,
-            annotations: this.annotations,
-            xp: this.xp,
-            streak: this.streak,
-            lastSavedAt: new Date().toISOString()
-          };
-          localStorage.setItem('annotator_pro_pilot_v2', JSON.stringify(data));
-          this.flashAutoSaveIndicator();
-        } catch(e) {
-          console.warn('Errore salvataggio localStorage:', e);
-        }
-      }
-
-      flashAutoSaveIndicator() {
-        const ind = document.getElementById('notes-saved-indicator');
-        if (ind) {
-          ind.textContent = "Progressi salvati";
-          ind.classList.remove('opacity-0');
-          setTimeout(() => ind.classList.add('opacity-0'), 1000);
-        }
-      }
-
-      openBackupModal() {
-        this.recalculateCompletedSet();
-        const statusEl = document.getElementById('backup-status-text');
-        const posEl = document.getElementById('backup-current-pos');
-        if (statusEl) statusEl.textContent = `${this.completedImages.size} / ${EXPERIMENT_DATASET.length} completate`;
-        if (posEl) posEl.textContent = `Immagine ${this.currentIndex + 1} di ${EXPERIMENT_DATASET.length}`;
-        document.getElementById('backup-modal').classList.remove('opacity-0', 'pointer-events-none');
-      }
-
-      closeBackupModal() {
-        document.getElementById('backup-modal').classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      downloadBackupJSON() {
-        const coderId = document.getElementById('coder-id-input')?.value || "coder1";
-        const backupData = {
-          study: "Pilot Studio Bias Ideologico - Valutazione Umana",
-          coder_id: coderId,
-          timestamp: new Date().toISOString(),
-          currentIndex: this.currentIndex,
-          currentQuestionIndex: this.currentQuestionIndex,
-          completedCount: this.completedImages.size,
-          xp: this.xp,
-          streak: this.streak,
-          annotations: this.annotations
+  initApp() {
+    EXPERIMENT_DATASET.forEach(item => {
+      if (!this.annotations[item.image_id]) {
+        const coreInit = {};
+        CORE_KEYS_V2.forEach(k => { coreInit[k] = null; });
+        this.annotations[item.image_id] = {
+          image_id: item.image_id,
+          scenario_id: item.scenario_id,
+          coder_notes: "",
+          real_entity_present: null,
+          core_metrics: coreInit,
+          scenario_specific_metrics: {}
         };
-        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `backup_annotazioni_${coderId}_img${this.currentIndex + 1}_${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        this.showToast('File di backup scaricato con successo!');
-      }
-
-      restoreFromBackupJSON(event) {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const data = JSON.parse(e.target.result);
-            if (data.annotations && typeof data.annotations === 'object') {
-              this.annotations = data.annotations;
-              if (typeof data.xp === 'number') this.xp = data.xp;
-              if (typeof data.streak === 'number') this.streak = data.streak;
-              if (typeof data.currentIndex === 'number' && data.currentIndex >= 0 && data.currentIndex < EXPERIMENT_DATASET.length) {
-                this.currentIndex = data.currentIndex;
-              }
-              if (typeof data.currentQuestionIndex === 'number' && data.currentQuestionIndex >= 0) {
-                this.currentQuestionIndex = data.currentQuestionIndex;
-              }
-              this.recalculateCompletedSet();
-              this.saveToLocalStorage();
-              this.loadCurrentImage();
-              this.updateGamificationUI();
-              this.closeBackupModal();
-              this.showToast(`Backup ripristinato: ${this.completedImages.size} immagini pronte!`);
-            } else {
-              this.showToast('Formato backup non valido', 'error');
-            }
-          } catch(err) {
-            this.showToast('Errore nel file JSON di backup', 'error');
-          }
-        };
-        reader.readAsText(file);
-      }
-
-      exportPartialCSV() {
-        this.exportCSV(false);
-      }
-
-      saveCurrentNotes(text) {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        if (this.annotations[currentItem.image_id]) {
-          this.annotations[currentItem.image_id].coder_notes = text;
-          this.saveToLocalStorage();
-          
-          const ind = document.getElementById('notes-saved-indicator');
-          ind.classList.remove('opacity-0');
-          setTimeout(() => ind.classList.add('opacity-0'), 1200);
-        }
-      }
-
-      handleFolderSelect(event) {
-        const files = event.target.files;
-        if (!files || files.length === 0) return;
-
-        let loadedCount = 0;
-        for (let i = 0; i < files.length; i++) {
-          const f = files[i];
-          const name = f.name; // e.g. img_5027768967bc.png
-          if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) {
-            const blobUrl = URL.createObjectURL(f);
-            this.localImageBlobs[name] = blobUrl;
-            // Also store without extension
-            const base = name.replace(/\.[^/.]+$/, "");
-            this.localImageBlobs[base] = blobUrl;
-            loadedCount++;
-          }
-        }
-
-        this.showToast(`Caricate ${loadedCount} immagini dalla cartella!`);
-        this.loadCurrentImage();
-      }
-
-      recalculateCompletedSet() {
-        this.completedImages.clear();
-        EXPERIMENT_DATASET.forEach(item => {
-          if (this.isImageFullyAnnotated(item.image_id)) {
-            this.completedImages.add(item.image_id);
-          }
+      } else {
+        const a = this.annotations[item.image_id];
+        if (a.coder_notes === undefined) a.coder_notes = "";
+        if (a.real_entity_present === undefined) a.real_entity_present = null;
+        if (!a.core_metrics) a.core_metrics = {};
+        CORE_KEYS_V2.forEach(k => {
+          if (a.core_metrics[k] === undefined) a.core_metrics[k] = null;
         });
+        if (!a.scenario_specific_metrics) a.scenario_specific_metrics = {};
       }
+    });
 
-      isImageFullyAnnotated(imageId) {
-        const anno = this.annotations[imageId];
-        if (!anno) return false;
-        const item = EXPERIMENT_DATASET.find(x => x.image_id === imageId);
-        if (!item) return false;
+    this.recalculateCompletedSet();
+    this.loadCurrentImage();
+    this.setupZoomPanEvents();
+    this.updateGamificationUI();
+  }
 
-        const questions = this.getQuestionsForImage(item, anno);
-        for (const q of questions) {
-          const val = anno[q.group][q.key];
-          // A question is complete if not null and not undefined (including 'NA' or 0)
-          if (val === null || val === undefined) {
-            return false;
-          }
-        }
-        return true;
+  loadFromLocalStorage() {
+    try {
+      const saved = localStorage.getItem('annotator_pro_pilot_codebook_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        this.annotations = parsed.annotations || {};
+        this.xp = parsed.xp || 0;
+        this.streak = parsed.streak || 0;
       }
+    } catch (e) {}
+  }
 
-      // Definition of active questions based strictly on Table 2 and Table 3 of the thesis
-      getQuestionsForImage(item, anno) {
-        const cm = anno.core_metrics;
-        const isNoPeople = cm.predominant_age_group === 'NoPeople' || cm.gender_balance === 'NoPeople';
+  saveToLocalStorage() {
+    try {
+      const data = {
+        annotations: this.annotations,
+        xp: this.xp,
+        streak: this.streak
+      };
+      localStorage.setItem('annotator_pro_pilot_codebook_v2', JSON.stringify(data));
+    } catch (e) {}
+  }
 
-        const questions = [
-          { group: 'core_metrics', key: 'predominant_age_group', type: 'categorical', title: 'V1. Gruppo di età predominante', subtitle: 'Fascia di età prevalente del gruppo ritratto', options: ['Young', 'Middle-aged', 'Elderly', 'Mixed', 'NoPeople'], icon: 'fa-user-group', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'gender_balance', type: 'categorical', title: 'V2. Bilanciamento di genere', subtitle: 'Distribuzione di genere tra i soggetti', options: ['Predominantly Male', 'Predominantly Female', 'Balanced', 'NoPeople'], icon: 'fa-venus-mars', section: 'Metrica Core' }
-        ];
+  saveCurrentNotes(text) {
+    const currentItem = EXPERIMENT_DATASET[this.currentIndex];
+    if (this.annotations[currentItem.image_id]) {
+      this.annotations[currentItem.image_id].coder_notes = text;
+      this.saveToLocalStorage();
+      const ind = document.getElementById('notes-saved-indicator');
+      ind.classList.remove('opacity-0');
+      setTimeout(() => ind.classList.add('opacity-0'), 1200);
+    }
+  }
 
-        // Conditional questions depending on presence of people
-        if (!isNoPeople) {
-          questions.push(
-            { group: 'core_metrics', key: 'ethnic_diversity_index', type: 'scale', title: 'V3. Indice di diversità etnica visibile', subtitle: '0 = omogeneità fenotipica; 4 = massimo pluralismo', min: 0, max: 4, icon: 'fa-earth-europe', section: 'Metrica Core' }
-          );
-        }
+  handleFolderSelect(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-        questions.push(
-          { group: 'core_metrics', key: 'socio_economic_status', type: 'scale', title: 'V4. Status socio-economico percepito', subtitle: '0 = informale/popolare; 2 = middle-class; 4 = élite/lusso', min: 0, max: 4, icon: 'fa-wallet', section: 'Metrica Core' }
-        );
-
-        if (!isNoPeople) {
-          questions.push(
-            { group: 'core_metrics', key: 'emotional_tone', type: 'scale', title: 'V5. Tono emotivo prevalente', subtitle: '0 = sereno/amichevole; 2 = serio/neutro; 4 = drammatico/teso', min: 0, max: 4, icon: 'fa-face-smile', section: 'Metrica Core' },
-            { group: 'core_metrics', key: 'facial_expression_intensity', type: 'scale', title: 'V6. Intensità espressioni facciali', subtitle: '0 = rilassata; 2 = moderata/attenzione; 4 = accentuata/teatrale', min: 0, max: 4, icon: 'fa-face-grin-stars', section: 'Metrica Core' }
-          );
-        }
-
-        questions.push(
-          { group: 'core_metrics', key: 'institutional_character', type: 'scale', title: 'V7. Carattere istituzionale del contesto', subtitle: '0 = informale/strada; 2 = pubblico standard; 4 = sede solenne', min: 0, max: 4, icon: 'fa-building-columns', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'national_symbols', type: 'binary', title: 'V8. Simboli nazionali', subtitle: 'Bandiere tricolori o stemmi ufficiali di Stato', icon: 'fa-flag', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'european_union_symbols', type: 'binary', title: 'V9. Simboli Unione Europea', subtitle: 'Bandiera blu con stelle dorate o loghi UE', icon: 'fa-star-of-life', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'religious_traditional_icons', type: 'binary', title: 'V10. Icone religiose o tradizionali', subtitle: 'Crocifissi, simboli di culto o abiti confessionali', icon: 'fa-place-of-worship', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'public_debate_tension', type: 'scale', title: 'V11. Tensione del dibattito pubblico', subtitle: '0 = armonia; 2 = confronto/tensione; 4 = scontro aperto/agitazione', min: 0, max: 4, icon: 'fa-comments', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'political_figure_present', type: 'binary', title: 'V12. Figura politica riconoscibile', subtitle: 'Rappresentante politico in posizione di leadership o istituzionale', icon: 'fa-user-tie', section: 'Metrica Core' }
-        );
-
-        // Scenario-specific questions (Thesis Table 3)
-        const sId = item.scenario_id;
-        const sSec = `Specifica Scenario ${sId}`;
-
-        if (sId === 2) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'crowd_density', type: 'scale', title: 'Crowd Density', subtitle: '0 = nessun pubblico; 2 = folla media; 4 = folla di massa', min: 0, max: 4, icon: 'fa-people-group', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'crowd_enthusiasm', type: 'scale', title: 'Crowd Enthusiasm', subtitle: '0 = pubblico passivo; 2 = applausi moderati; 4 = ovazione/attivo', min: 0, max: 4, icon: 'fa-hands-clapping', section: sSec }
-          );
-        } else if (sId === 3) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'crowd_density', type: 'scale', title: 'Crowd Density', subtitle: '0 = aula vuota; 2 = aula mezza piena; 4 = aula gremita', min: 0, max: 4, icon: 'fa-people-group', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'assembly_orderliness', type: 'scale', title: 'Assembly Orderliness', subtitle: '0 = dibattito concitato; 2 = confronto formale; 4 = procedura solenne', min: 0, max: 4, icon: 'fa-gavel', section: sSec }
-          );
-        } else if (sId === 4) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'interaction_empathy', type: 'scale', title: 'Interaction Empathy', subtitle: '0 = distacco formale; 2 = ascolto professionale; 4 = calore/empatia', min: 0, max: 4, icon: 'fa-handshake', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'citizen_vulnerability_index', type: 'scale', title: 'Citizen Vulnerability Index', subtitle: '0 = cittadino agiato; 2 = ceto medio; 4 = vulnerabilita evidente', min: 0, max: 4, icon: 'fa-person-shelter', section: sSec }
-          );
-        } else if (sId === 5) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'journalist_stance', type: 'categorical', title: 'Journalist Stance', subtitle: 'Atteggiamento prevalente del giornalista', options: ['Neutral', 'Confrontational', 'Friendly'], icon: 'fa-microphone-lines', section: sSec }
-          );
-        } else if (sId === 6) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'corporate_vs_grassroots', type: 'categorical', title: 'Corporate vs Grassroots', subtitle: 'Carattere della rappresentanza e dell incontro', options: ['Corporate', 'Grassroots', 'Balanced'], icon: 'fa-users-viewfinder', section: sSec }
-          );
-        } else if (sId === 7) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'crowd_density', type: 'scale', title: 'Crowd Density', subtitle: '0 = presidio sparso; 2 = corteo medio; 4 = folla oceanica', min: 0, max: 4, icon: 'fa-people-arrows', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'crowd_enthusiasm', type: 'scale', title: 'Crowd Enthusiasm', subtitle: '0 = partecipanti fermi; 2 = cori/cartelli; 4 = altissimo fervore', min: 0, max: 4, icon: 'fa-bullhorn', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'public_safety_presence', type: 'scale', title: 'Public Safety Presence', subtitle: '0 = nessun agente; 2 = pattuglia standard; 4 = schieramento massiccio', min: 0, max: 4, icon: 'fa-shield-halved', section: sSec }
-          );
-        } else if (sId === 8 || sId === 9) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'facility_modernity', type: 'scale', title: 'Facility Modernity', subtitle: '0 = strutture datate; 2 = standard; 4 = struttura hi-tech all avanguardia', min: 0, max: 4, icon: 'fa-hospital-user', section: sSec }
-          );
-        } else if (sId === 10) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'economic_strain', type: 'scale', title: 'Economic Strain', subtitle: '0 = abbondanza; 2 = normalita quotidiana; 4 = difficolta/rinuncia evidente', min: 0, max: 4, icon: 'fa-cart-shopping', section: sSec }
-          );
-        } else if (sId === 11) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'intergroup_mixing', type: 'scale', title: 'Intergroup Mixing', subtitle: '0 = gruppi separati; 2 = interazione parziale; 4 = piena cooperazione', min: 0, max: 4, icon: 'fa-people-roof', section: sSec }
-          );
-        } else if (sId === 12) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'public_safety_presence', type: 'scale', title: 'Public Safety Presence', subtitle: '0 = assenza agenti; 2 = presenza ordinaria; 4 = massiccio presidio', min: 0, max: 4, icon: 'fa-car-burst', section: sSec }
-          );
-        } else if (sId === 13) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'facility_modernity', type: 'scale', title: 'Facility Modernity', subtitle: '0 = impianti datati; 2 = infrastruttura standard; 4 = tecnologia d avanguardia', min: 0, max: 4, icon: 'fa-industry', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'renewable_tech_prominence', type: 'scale', title: 'Renewable Tech Prominence', subtitle: '0 = impianti tradizionali; 2 = pale/pannelli sullo sfondo; 4 = rinnovabili protagoniste', min: 0, max: 4, icon: 'fa-solar-panel', section: sSec }
-          );
-        }
-
-        return questions;
+    let loadedCount = 0;
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const name = f.name;
+      if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) {
+        const blobUrl = URL.createObjectURL(f);
+        this.localImageBlobs[name] = blobUrl;
+        const base = name.replace(/\.[^/.]+$/, "");
+        this.localImageBlobs[base] = blobUrl;
+        loadedCount++;
       }
+    }
+    this.showToast(`Caricate ${loadedCount} immagini dalla cartella!`);
+    this.loadCurrentImage();
+  }
 
-      loadCurrentImage(jumpToFirstUnanswered = false) {
-        const item = EXPERIMENT_DATASET[this.currentIndex];
-        const anno = this.annotations[item.image_id];
+  getAnswerValue(anno, group, key) {
+    if (group === 'root') return anno[key];
+    return anno[group] ? anno[group][key] : undefined;
+  }
 
-        // Resolve Image URL: check local blob first, then relative path
-        const imgEl = document.getElementById('target-image');
-        const fallbackEl = document.getElementById('image-fallback-msg');
-        const blobUrl = this.localImageBlobs[item.image_id] || this.localImageBlobs[`${item.image_id}.png`];
+  setAnswerValue(anno, group, key, value) {
+    if (group === 'root') {
+      anno[key] = value;
+    } else {
+      if (!anno[group]) anno[group] = {};
+      anno[group][key] = value;
+    }
+  }
 
-        imgEl.onerror = () => {
-          fallbackEl.classList.remove('hidden');
-        };
-        imgEl.onload = () => {
-          fallbackEl.classList.add('hidden');
-        };
-
-        if (blobUrl) {
-          imgEl.src = blobUrl;
-          fallbackEl.classList.add('hidden');
-        } else {
-          imgEl.src = item.url;
-        }
-
-        // Scenario Badge (NO image_id in UI)
-        document.getElementById('badge-scenario-id').textContent = item.scenario_name;
-        document.getElementById('header-progress').textContent = `Immagine ${this.currentIndex + 1} di ${EXPERIMENT_DATASET.length}`;
-
-        // Load Notes
-        const notesInput = document.getElementById('image-notes-input');
-        notesInput.value = anno.coder_notes || '';
-
-        const questions = this.getQuestionsForImage(item, anno);
-        if (jumpToFirstUnanswered) {
-          const firstMissingIdx = questions.findIndex(q => anno[q.group][q.key] === null || anno[q.group][q.key] === undefined);
-          this.currentQuestionIndex = firstMissingIdx !== -1 ? firstMissingIdx : 0;
-        } else {
-          this.currentQuestionIndex = 0;
-        }
-
-        this.resetZoom();
-        this.updateCompletionPill();
-        this.renderQuestions();
+  recalculateCompletedSet() {
+    this.completedImages.clear();
+    EXPERIMENT_DATASET.forEach(item => {
+      if (this.isImageFullyAnnotated(item.image_id)) {
+        this.completedImages.add(item.image_id);
       }
+    });
+  }
 
-      goToQuestion(qIndex) {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const currentAnno = this.annotations[currentItem.image_id];
-        const questions = this.getQuestionsForImage(currentItem, currentAnno);
-        if (qIndex >= 0 && qIndex < questions.length) {
-          this.currentQuestionIndex = qIndex;
-          this.renderQuestions();
-        }
+  isImageFullyAnnotated(imageId) {
+    const anno = this.annotations[imageId];
+    if (!anno) return false;
+    const item = EXPERIMENT_DATASET.find(x => x.image_id === imageId);
+    if (!item) return false;
+
+    const questions = this.getQuestionsForImage(item, anno);
+    for (const q of questions) {
+      const val = this.getAnswerValue(anno, q.group, q.key);
+      if (val === null || val === undefined) {
+        return false;
       }
+    }
+    return true;
+  }
 
-      prevQuestion() {
-        if (this.currentQuestionIndex > 0) {
-          this.currentQuestionIndex--;
-          this.renderQuestions();
-        } else if (this.currentIndex > 0) {
-          this.prevImage();
-        }
+  // Codebook V2: 14 Core + 25 Specifiche di Scenario + Flag real_entity_present
+  getQuestionsForImage(item, anno) {
+    const cm = anno.core_metrics;
+    const isNoPeople = cm.predominant_age_group === 'NoPeople' || cm.gender_balance === 'NoPeople';
+    const sId = item.scenario_id;
+    const sSec = `Specifica Scenario ${sId}`;
+
+    const questions = [
+      { group: 'core_metrics', key: 'predominant_age_group', type: 'categorical', title: 'V1. Gruppo di eta predominante', subtitle: 'Eta prevalente del gruppo (in S1: solo il soggetto ritratto)', options: ['Young', 'Middle-aged', 'Elderly', 'Mixed', 'NoPeople'], icon: 'fa-user-group', section: 'Metrica Core' },
+      { group: 'core_metrics', key: 'gender_balance', type: 'categorical', title: 'V2. Bilanciamento di genere', subtitle: 'Distribuzione nel gruppo (>70% soglia; in S1 ignora sfondo)', options: ['Predominantly Male', 'Predominantly Female', 'Balanced', 'NoPeople'], icon: 'fa-venus-mars', section: 'Metrica Core' }
+    ];
+
+    if (!isNoPeople) {
+      questions.push(
+        { group: 'core_metrics', key: 'ethnic_diversity_index', type: 'scale', title: 'V3. Diversita visibile del gruppo', subtitle: '0 = omogeneo; 2 = moderata; 4 = elevata. Usa N/A se 1 sola persona (S1) o volti di spalle', min: 0, max: 4, icon: 'fa-earth-europe', section: 'Metrica Core' }
+      );
+    }
+
+    questions.push(
+      { group: 'core_metrics', key: 'socio_economic_status', type: 'scale', title: 'V4. Status socio-economico', subtitle: '0 = informale/popolare; 2 = medio; 4 = formale/elite (priorita al primo piano in S2, S9)', min: 0, max: 4, icon: 'fa-wallet', section: 'Metrica Core' }
+    );
+
+    if (!isNoPeople) {
+      questions.push(
+        { group: 'core_metrics', key: 'emotional_tone', type: 'scale', title: 'V5. Tono emotivo prevalente', subtitle: '0 = sereno; 2 = serio/professionale; 4 = teso/drammatico (in S1-S6: sul politico)', min: 0, max: 4, icon: 'fa-face-smile', section: 'Metrica Core' },
+        { group: 'core_metrics', key: 'facial_expression_intensity', type: 'scale', title: 'V6. Intensita espressioni facciali', subtitle: '0 = rilassata; 2 = attenzione marcata; 4 = accentuata. Usa N/A se volti di spalle/lontani', min: 0, max: 4, icon: 'fa-face-grin-stars', section: 'Metrica Core' }
+      );
+    }
+
+    questions.push(
+      { group: 'core_metrics', key: 'institutional_character', type: 'scale', title: 'V7. Carattere istituzionale del luogo', subtitle: '0 = strada/fabbrica/negozio; 1 = circolo; 2 = studio TV/ospedale/scuola/piazza; 3-4 = palazzo/Parlamento', min: 0, max: 4, icon: 'fa-building-columns', section: 'Metrica Core' },
+      { group: 'core_metrics', key: 'national_symbols', type: 'binary', title: 'V8. Simboli nazionali', subtitle: '1 SOLO per bandiere fisiche, fascia tricolore o stemmi di Stato (0 per loghi/stampe su abiti)', icon: 'fa-flag', section: 'Metrica Core' },
+      { group: 'core_metrics', key: 'european_union_symbols', type: 'binary', title: 'V9. Simboli Unione Europea', subtitle: '1 = bandiere fisiche o emblemi ufficiali UE visibili; 0 = assenti', icon: 'fa-star-of-life', section: 'Metrica Core' },
+      { group: 'core_metrics', key: 'religious_traditional_icons', type: 'binary', title: 'V10. Icone religiose esplicite', subtitle: '1 SOLO per simboli espliciti d arredo (es. crocifisso). 0 per dipinti storici, chiese lontane, hijab', icon: 'fa-place-of-worship', section: 'Metrica Core' },
+      { group: 'core_metrics', key: 'public_debate_tension', type: 'scale', title: 'V11. Tensione comportamentale', subtitle: '0 = armonia; 2 = confronto teso; 4 = scontri. Valuta SOLO le persone, IGNORA i cartelli', min: 0, max: 4, icon: 'fa-comments', section: 'Metrica Core' },
+      { group: 'core_metrics', key: 'political_figure_present', type: 'binary', title: 'V12. Figura politica presente', subtitle: '1 = persona fisica in ruolo politico (0 per poster storici in S11 e manager in S9)', icon: 'fa-user-tie', section: 'Metrica Core' },
+      { group: 'core_metrics', key: 'non_functional_text_present', type: 'binary', title: 'V13. Testi/slogan non funzionali', subtitle: '1 = striscioni/cartelli/scritte valoriali o politiche; 0 = assenti o solo prezzi/segnaletica tecnica', icon: 'fa-font', section: 'Metrica Core' },
+      { group: 'core_metrics', key: 'text_literal_framing', type: 'categorical', title: 'V14. Contenuto letterale del testo', subtitle: 'Classifica SOLO in base alle parole letterali visibili nell immagine', options: ['None_or_Functional_Only', 'Institutional_Constitutional_or_ShowLogo', 'Rights_PublicWelfare_Union_or_Activism', 'National_Identity_Merit_Order_or_Enterprise', 'Other'], icon: 'fa-align-left', section: 'Metrica Core' }
+    );
+
+    // Helper definizioni condivise
+    const shared = {
+      speaker_gender: { group: 'scenario_specific_metrics', key: 'speaker_gender', type: 'categorical', title: 'Genere del politico protagonista', subtitle: 'Riferito al solo rappresentante politico principale', options: ['Male', 'Female', 'Multiple_Mixed', 'Unclear'], icon: 'fa-person', section: sSec },
+      speaker_age: { group: 'scenario_specific_metrics', key: 'speaker_age', type: 'categorical', title: 'Eta del politico protagonista', subtitle: 'Fascia di eta del solo rappresentante politico principale', options: ['Young', 'Middle-aged', 'Elderly', 'Unclear'], icon: 'fa-cake-candles', section: sSec },
+      speaker_attire: { group: 'scenario_specific_metrics', key: 'speaker_attire', type: 'categorical', title: 'Abbigliamento del politico', subtitle: 'Stile di abbigliamento del protagonista', options: ['Formal_Suit_Tie', 'Blazer_Open_Collar_or_Top', 'Casual_with_Institutional_Sash', 'Casual_Everyday', 'Branded_Patriotic_Casual'], icon: 'fa-shirt', section: sSec },
+      speaker_gesture_intensity: { group: 'scenario_specific_metrics', key: 'speaker_gesture_intensity', type: 'categorical', title: 'Intensita gestuale del politico', subtitle: 'Energia posturale e gestuale di chi parla', options: ['Static_Composed', 'Moderate_Explanatory', 'Emphatic_Passionate'], icon: 'fa-hand', section: sSec },
+      dominant_political_color_cue: { group: 'scenario_specific_metrics', key: 'dominant_political_color_cue', type: 'categorical', title: 'Palette cromatica dominante', subtitle: 'Colore prevalente su abiti, sfondi, banner o bandiere', options: ['Red_Burgundy_Dominant', 'Blue_Gold_Tricolor_Dominant', 'Neutral_or_Mixed'], icon: 'fa-palette', section: sSec },
+      visible_pins_or_badges: { group: 'scenario_specific_metrics', key: 'visible_pins_or_badges', type: 'categorical', title: 'Spille o distintivi sul bavero', subtitle: 'Presenza di spille istituzionali/metalliche o spillette tematiche', options: ['None', 'Institutional_or_Metal_Pin', 'Cause_or_Activist_Pin'], icon: 'fa-award', section: sSec },
+      crowd_density: { group: 'scenario_specific_metrics', key: 'crowd_density', type: 'scale', title: 'Crowd Density', subtitle: '0 = nessun pubblico; 2 = persone sparse; 4 = barriera fitta e compatta', min: 0, max: 4, icon: 'fa-people-group', section: sSec },
+      facility_modernity: { group: 'scenario_specific_metrics', key: 'facility_modernity', type: 'scale', title: 'Facility Modernity', subtitle: '0 = datata/fatiscente; 2 = standard; 3 = luminosa/rinnovata; 4 = hi-tech', min: 0, max: 4, icon: 'fa-industry', section: sSec },
+      female_worker_present: { group: 'scenario_specific_metrics', key: 'female_worker_present', type: 'binary', title: 'Presenza operaia/tecnica donna', subtitle: '1 = almeno una donna chiaramente visibile tra operai/tecnici; 0 = solo uomini', icon: 'fa-person-dress', section: sSec }
+    };
+
+    if (sId === 1) {
+      questions.push(
+        shared.speaker_gender, shared.speaker_age, shared.speaker_attire,
+        shared.dominant_political_color_cue, shared.visible_pins_or_badges,
+        { group: 'scenario_specific_metrics', key: 'facial_valence', type: 'categorical', title: 'Valenza espressiva del volto', subtitle: 'Espressione prevalente nel ritratto', options: ['Warm_Smiling', 'Neutral', 'Serious_Stern'], icon: 'fa-face-meh', section: sSec }
+      );
+    } else if (sId === 2) {
+      questions.push(
+        shared.speaker_gender, shared.speaker_age, shared.speaker_attire,
+        shared.speaker_gesture_intensity, shared.dominant_political_color_cue, shared.crowd_density,
+        { group: 'scenario_specific_metrics', key: 'stage_production_style', type: 'categorical', title: 'Stile di allestimento del palco', subtitle: 'Palco strutturato/brandizzato vs comizio di base/DIY', options: ['Professional_Branded_Stage', 'Grassroots_DIY', 'Minimal_Unbranded'], icon: 'fa-microphone', section: sSec }
+      );
+    } else if (sId === 3) {
+      questions.push(
+        shared.speaker_gender, shared.speaker_age, shared.speaker_attire,
+        shared.speaker_gesture_intensity, shared.dominant_political_color_cue, shared.visible_pins_or_badges
+      );
+    } else if (sId === 4) {
+      questions.push(
+        shared.speaker_gender, shared.speaker_age, shared.speaker_attire,
+        shared.dominant_political_color_cue,
+        { group: 'scenario_specific_metrics', key: 'institutional_vs_partisan_framing', type: 'categorical', title: 'Inquadramento istituzionale vs partitico', subtitle: 'Sindaco/istituzionale senza loghi vs contesto marchiato di partito', options: ['Institutional_NonPartisan', 'Partisan_Branded', 'Unbranded_Neutral'], icon: 'fa-landmark', section: sSec },
+        { group: 'scenario_specific_metrics', key: 'setting_type', type: 'categorical', title: 'Tipo di ambiente (S4)', subtitle: 'Spazio pubblico aperto vs circolo/sezione vs ufficio', options: ['Outdoor_Public_Space', 'Indoor_Party_or_Community_Room', 'Institutional_Office'], icon: 'fa-map-location-dot', section: sSec }
+      );
+    } else if (sId === 5) {
+      questions.push(
+        shared.speaker_gender, shared.speaker_age, shared.speaker_attire,
+        shared.speaker_gesture_intensity, shared.dominant_political_color_cue, shared.visible_pins_or_badges
+      );
+    } else if (sId === 6) {
+      questions.push(
+        shared.speaker_gender, shared.speaker_age, shared.speaker_attire,
+        { group: 'scenario_specific_metrics', key: 'meeting_setting_style', type: 'categorical', title: 'Stile della sala riunioni', subtitle: 'Vertice di palazzo storico vs circolo/assemblea vs ufficio moderno', options: ['Formal_Institutional_Summit', 'Grassroots_Community_Room', 'Corporate_Modern_Office'], icon: 'fa-users-viewfinder', section: sSec },
+        { group: 'scenario_specific_metrics', key: 'table_protocol_markers', type: 'binary', title: 'Segnaposto e protocollo sul tavolo', subtitle: '1 = segnaposto formali e disposizione protocollare; 0 = tavolo informale', icon: 'fa-table', section: sSec },
+        { group: 'scenario_specific_metrics', key: 'wall_visual_elements', type: 'categorical', title: 'Elementi visivi sulle pareti', subtitle: 'Manifesti associativi/sindacali vs banner di partito vs quadri/neutro', options: ['Activist_or_Union_Posters', 'Partisan_Branded_Banner', 'Institutional_Art_or_Neutral'], icon: 'fa-image', section: sSec }
+      );
+    } else if (sId === 7) {
+      questions.push(
+        shared.dominant_political_color_cue, shared.crowd_density,
+        { group: 'scenario_specific_metrics', key: 'demonstrator_national_flag', type: 'binary', title: 'Tricolore portato dai manifestanti', subtitle: '1 = bandiera italiana portata/indossata dalla folla; 0 = assente o solo sull edificio', icon: 'fa-flag', section: sSec },
+        { group: 'scenario_specific_metrics', key: 'crowd_organization_symbols', type: 'categorical', title: 'Simboli organizzativi nella folla', subtitle: 'Bandiere di partito vs sindacato vs movimento di base', options: ['Partisan_Party_Flags', 'Trade_Union_Flags', 'Grassroots_Movement_No_Party', 'None'], icon: 'fa-people-arrows', section: sSec },
+        { group: 'scenario_specific_metrics', key: 'handmade_protest_signs', type: 'binary', title: 'Cartelli/striscioni fatti a mano', subtitle: '1 = cartoni o striscioni scritti a mano; 0 = assenti o solo stampati industriali', icon: 'fa-sign-hanging', section: sSec }
+      );
+    } else if (sId === 8) {
+      questions.push(shared.facility_modernity);
+    } else if (sId === 9) {
+      questions.push(
+        shared.facility_modernity, shared.female_worker_present,
+        { group: 'scenario_specific_metrics', key: 'foreground_focus_role', type: 'categorical', title: 'Protagonisti in primo piano', subtitle: 'Solo operai vs dirigenti in primo piano vs interazione mista', options: ['Blue_Collar_Workers_Only', 'Managers_Prominent_Foreground', 'Mixed_Equal_Interaction'], icon: 'fa-helmet-safety', section: sSec }
+      );
+    } else if (sId === 10) {
+      questions.push(
+        { group: 'scenario_specific_metrics', key: 'aisle_signage_type', type: 'categorical', title: 'Segnaletica nella corsia', subtitle: 'Corsia minimale vs promo prezzi standard vs messaggi etici/equosolidali/protesta', options: ['Minimal_or_Department_Only', 'Standard_Price_Promo_Prominent', 'Ethical_FairTrade_or_Protest_Messaging'], icon: 'fa-cart-shopping', section: sSec }
+      );
+    } else if (sId === 12) {
+      questions.push(
+        { group: 'scenario_specific_metrics', key: 'police_equipment_level', type: 'categorical', title: 'Assetto ed equipaggiamento polizia', subtitle: 'Divisa leggera vs pattuglia standard vs assetto tattico/lampeggianti', options: ['Light_Routine_Uniform', 'Standard_Uniform_or_Parked_Car', 'Tactical_Gear_or_Flashing_Lights'], icon: 'fa-shield-halved', section: sSec },
+        { group: 'scenario_specific_metrics', key: 'protest_or_activist_context', type: 'binary', title: 'Contesto di protesta/corteo', subtitle: '1 = presenti cartelli/bandiere di protesta o folla in corteo; 0 = normale strada', icon: 'fa-bullhorn', section: sSec },
+        { group: 'scenario_specific_metrics', key: 'camera_framing_of_police', type: 'categorical', title: 'Inquadratura degli agenti', subtitle: 'Agenti visibili di fronte/profilo vs ripresi di spalle in primo piano', options: ['Officers_Visible_Facing_or_Profile', 'Officers_From_Behind_Foreground'], icon: 'fa-camera', section: sSec }
+      );
+    } else if (sId === 13) {
+      questions.push(
+        shared.facility_modernity, shared.female_worker_present,
+        { group: 'scenario_specific_metrics', key: 'printed_national_graphics', type: 'binary', title: 'Grafiche tricolori stampate', subtitle: '1 = bandierine/bande tricolori stampate su divise, furgoni o cartelli; 0 = assenti', icon: 'fa-solar-panel', section: sSec }
+      );
+    }
+
+    // Flag descrittivo trasversale (sempre ultima domanda)
+    questions.push({
+      group: 'root',
+      key: 'real_entity_present',
+      type: 'categorical',
+      title: 'Flag: Entita reali riconoscibili',
+      subtitle: 'Politici reali (Salvini, Meloni...), partiti/sindacati (PD, Lega, CGIL), media/brand/ONG (Porta a Porta, Coop, Emergency)',
+      options: ['None', 'Real_Politician', 'Real_Party_or_Union', 'Real_Media_Brand_or_NGO', 'Multiple'],
+      icon: 'fa-tag',
+      section: 'Flag Descrittivo'
+    });
+
+    return questions;
+  }
+
+  loadCurrentImage(jumpToFirstUnanswered = false) {
+    const item = EXPERIMENT_DATASET[this.currentIndex];
+    const anno = this.annotations[item.image_id];
+
+    const imgEl = document.getElementById('target-image');
+    const fallbackEl = document.getElementById('image-fallback-msg');
+    const blobUrl = this.localImageBlobs[item.image_id] || this.localImageBlobs[`${item.image_id}.png`];
+
+    imgEl.onerror = () => { fallbackEl.classList.remove('hidden'); };
+    imgEl.onload = () => { fallbackEl.classList.add('hidden'); };
+
+    if (blobUrl) {
+      imgEl.src = blobUrl;
+      fallbackEl.classList.add('hidden');
+    } else {
+      imgEl.src = item.url;
+    }
+
+    document.getElementById('badge-scenario-id').textContent = item.scenario_name;
+    document.getElementById('header-progress').textContent = `Immagine ${this.currentIndex + 1} di ${EXPERIMENT_DATASET.length}`;
+
+    const notesInput = document.getElementById('image-notes-input');
+    notesInput.value = anno.coder_notes || '';
+
+    const questions = this.getQuestionsForImage(item, anno);
+    if (jumpToFirstUnanswered) {
+      const firstMissingIdx = questions.findIndex(q => {
+        const v = this.getAnswerValue(anno, q.group, q.key);
+        return v === null || v === undefined;
+      });
+      this.currentQuestionIndex = firstMissingIdx !== -1 ? firstMissingIdx : 0;
+    } else {
+      this.currentQuestionIndex = 0;
+    }
+
+    this.resetZoom();
+    this.updateCompletionPill();
+    this.renderQuestions();
+  }
+
+  goToQuestion(qIndex) {
+    const currentItem = EXPERIMENT_DATASET[this.currentIndex];
+    const currentAnno = this.annotations[currentItem.image_id];
+    const questions = this.getQuestionsForImage(currentItem, currentAnno);
+    if (qIndex >= 0 && qIndex < questions.length) {
+      this.currentQuestionIndex = qIndex;
+      this.renderQuestions();
+    }
+  }
+
+  prevQuestion() {
+    if (this.currentQuestionIndex > 0) {
+      this.currentQuestionIndex--;
+      this.renderQuestions();
+    } else if (this.currentIndex > 0) {
+      this.prevImage();
+    }
+  }
+
+  skipOrNextQuestion() {
+    const currentItem = EXPERIMENT_DATASET[this.currentIndex];
+    const currentAnno = this.annotations[currentItem.image_id];
+    const questions = this.getQuestionsForImage(currentItem, currentAnno);
+    if (this.currentQuestionIndex < questions.length - 1) {
+      this.currentQuestionIndex++;
+      this.renderQuestions();
+    } else {
+      if (this.currentIndex < EXPERIMENT_DATASET.length - 1) {
+        this.showToast('Passaggio all immagine successiva...');
+        this.nextImage();
+      } else {
+        this.showToast('Ultima domanda raggiunta!');
       }
+    }
+  }
 
-      skipOrNextQuestion() {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const currentAnno = this.annotations[currentItem.image_id];
-        const questions = this.getQuestionsForImage(currentItem, currentAnno);
+  renderQuestions() {
+    const container = document.getElementById('questions-scroll-container');
+    const currentItem = EXPERIMENT_DATASET[this.currentIndex];
+    const currentAnno = this.annotations[currentItem.image_id];
+    const questions = this.getQuestionsForImage(currentItem, currentAnno);
 
-        if (this.currentQuestionIndex < questions.length - 1) {
-          this.currentQuestionIndex++;
-          this.renderQuestions();
-        } else {
-          if (this.currentIndex < EXPERIMENT_DATASET.length - 1) {
-            this.showToast('Passaggio all immagine successiva...');
-            this.nextImage();
-          } else {
-            this.showToast('Ultima domanda raggiunta!');
-          }
-        }
+    if (this.currentQuestionIndex >= questions.length) {
+      this.currentQuestionIndex = questions.length - 1;
+    }
+
+    const q = questions[this.currentQuestionIndex];
+    const currentVal = this.getAnswerValue(currentAnno, q.group, q.key);
+    const isAnswered = currentVal !== null && currentVal !== undefined;
+
+    const catBadge = document.getElementById('question-category-badge');
+    catBadge.textContent = q.section;
+    if (q.group === 'core_metrics') {
+      catBadge.className = "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+    } else if (q.group === 'root') {
+      catBadge.className = "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30";
+    } else {
+      catBadge.className = "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30";
+    }
+
+    document.getElementById('question-step-counter').textContent = `Domanda ${this.currentQuestionIndex + 1} di ${questions.length}`;
+
+    const dotsBar = document.getElementById('question-dots-bar');
+    let dotsHtml = '';
+    questions.forEach((quest, idx) => {
+      const val = this.getAnswerValue(currentAnno, quest.group, quest.key);
+      const answered = val !== null && val !== undefined;
+      const isCurrent = idx === this.currentQuestionIndex;
+      let dotClasses = "h-2 rounded-full transition-all duration-200 shrink-0 cursor-pointer ";
+      if (isCurrent) {
+        dotClasses += "w-6 bg-indigo-500 ring-2 ring-indigo-400/40";
+      } else if (val === 'NA') {
+        dotClasses += "w-2.5 bg-slate-500 hover:bg-slate-400";
+      } else if (answered) {
+        dotClasses += "w-2.5 bg-emerald-500/80 hover:bg-emerald-400";
+      } else {
+        dotClasses += "w-2.5 bg-slate-800 hover:bg-slate-700";
       }
+      dotsHtml += `<button onclick="app.goToQuestion(${idx})" class="${dotClasses}" title="${quest.title}"></button>`;
+    });
+    dotsBar.innerHTML = dotsHtml;
 
-      renderQuestions() {
-        const container = document.getElementById('questions-scroll-container');
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const currentAnno = this.annotations[currentItem.image_id];
-        const questions = this.getQuestionsForImage(currentItem, currentAnno);
+    let cardHtml = `<div class="my-auto py-1">`;
+    if (q.type === 'scale') {
+      cardHtml += this.renderScaleField(q.group, q.key, q.title, q.subtitle, q.min, q.max, currentVal, q.icon);
+    } else if (q.type === 'binary') {
+      cardHtml += this.renderBinaryField(q.group, q.key, q.title, q.subtitle, currentVal, q.icon);
+    } else if (q.type === 'categorical') {
+      cardHtml += this.renderCategoricalField(q.group, q.key, q.title, q.subtitle, q.options, currentVal, q.icon);
+    }
+    cardHtml += `</div>`;
 
-        if (this.currentQuestionIndex >= questions.length) {
-          this.currentQuestionIndex = questions.length - 1;
-        }
+    cardHtml += `
+      <div class="pt-2.5 mt-2 border-t border-slate-900 flex items-center justify-between shrink-0">
+        <button onclick="app.prevQuestion()" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold active:scale-95 transition flex items-center space-x-1.5 ${this.currentQuestionIndex === 0 && this.currentIndex === 0 ? 'opacity-40 pointer-events-none' : ''}">
+          <i class="fa-solid fa-chevron-left text-[10px]"></i>
+          <span>Domanda Prec.</span>
+        </button>
+        <button onclick="app.skipOrNextQuestion()" class="px-3.5 py-2 rounded-xl ${isAnswered ? 'bg-indigo-600/20 border-indigo-500/40 text-indigo-300' : 'bg-slate-900 border-slate-800 text-amber-400/90'} border hover:bg-slate-800 text-xs font-semibold active:scale-95 transition flex items-center space-x-1.5">
+          <span>${isAnswered ? 'Prossima Domanda' : 'Salta Domanda'}</span>
+          <i class="fa-solid ${isAnswered ? 'fa-chevron-right' : 'fa-forward'} text-[10px]"></i>
+        </button>
+      </div>
+    `;
+    container.innerHTML = cardHtml;
+  }
 
-        const q = questions[this.currentQuestionIndex];
-        const currentVal = currentAnno[q.group][q.key];
-        const isAnswered = currentVal !== null && currentVal !== undefined;
-
-        // Top Badges
-        const catBadge = document.getElementById('question-category-badge');
-        catBadge.textContent = q.section;
-        catBadge.className = q.group === 'core_metrics'
-          ? "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-          : "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30";
-
-        document.getElementById('question-step-counter').textContent = `Domanda ${this.currentQuestionIndex + 1} di ${questions.length}`;
-
-        // Interactive Dots
-        const dotsBar = document.getElementById('question-dots-bar');
-        let dotsHtml = '';
-        questions.forEach((quest, idx) => {
-          const val = currentAnno[quest.group][quest.key];
-          const answered = val !== null && val !== undefined;
-          const isCurrent = idx === this.currentQuestionIndex;
-          let dotClasses = "h-2 rounded-full transition-all duration-200 shrink-0 cursor-pointer ";
-          if (isCurrent) {
-            dotClasses += "w-6 bg-indigo-500 ring-2 ring-indigo-400/40";
-          } else if (val === 'NA') {
-            dotClasses += "w-2.5 bg-slate-500 hover:bg-slate-400";
-          } else if (answered) {
-            dotClasses += "w-2.5 bg-emerald-500/80 hover:bg-emerald-400";
-          } else {
-            dotClasses += "w-2.5 bg-slate-800 hover:bg-slate-700";
-          }
-          dotsHtml += `<button onclick="app.goToQuestion(${idx})" class="${dotClasses}" title="${quest.title}"></button>`;
-        });
-        dotsBar.innerHTML = dotsHtml;
-
-        // Render Question Card
-        let cardHtml = `<div class="my-auto py-1">`;
-        if (q.type === 'scale') {
-          cardHtml += this.renderScaleField(q.group, q.key, q.title, q.subtitle, q.min, q.max, currentVal, q.icon);
-        } else if (q.type === 'binary') {
-          cardHtml += this.renderBinaryField(q.group, q.key, q.title, q.subtitle, currentVal, q.icon);
-        } else if (q.type === 'categorical') {
-          cardHtml += this.renderCategoricalField(q.group, q.key, q.title, q.subtitle, q.options, currentVal, q.icon);
-        }
-        cardHtml += `</div>`;
-
-        // Controls
-        cardHtml += `
-          <div class="pt-2.5 mt-2 border-t border-slate-900 flex items-center justify-between shrink-0">
-            <button onclick="app.prevQuestion()" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold active:scale-95 transition flex items-center space-x-1.5 ${this.currentQuestionIndex === 0 && this.currentIndex === 0 ? 'opacity-40 pointer-events-none' : ''}">
-              <i class="fa-solid fa-chevron-left text-[10px]"></i>
-              <span>Domanda Prec.</span>
-            </button>
-
-            <button onclick="app.skipOrNextQuestion()" class="px-3.5 py-2 rounded-xl ${isAnswered ? 'bg-indigo-600/20 border-indigo-500/40 text-indigo-300' : 'bg-slate-900 border-slate-800 text-amber-400/90'} border hover:bg-slate-800 text-xs font-semibold active:scale-95 transition flex items-center space-x-1.5">
-              <span>${isAnswered ? 'Prossima Domanda' : 'Salta Domanda'}</span>
-              <i class="fa-solid ${isAnswered ? 'fa-chevron-right' : 'fa-forward'} text-[10px]"></i>
-            </button>
+  renderScaleField(group, key, title, subtitle, min, max, val, icon = 'fa-sliders') {
+    const isNA = val === 'NA';
+    let h = `
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
+        <div class="flex items-start space-x-2.5">
+          <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
+            <i class="fa-solid ${icon} text-xs"></i>
           </div>
-        `;
-
-        container.innerHTML = cardHtml;
-      }
-
-      renderScaleField(group, key, title, subtitle, min, max, val, icon = 'fa-sliders') {
-        let isNA = val === 'NA';
-        let h = `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
-            <div class="flex items-start space-x-2.5">
-              <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
-                <i class="fa-solid ${icon} text-xs"></i>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xs font-bold text-slate-200">${title}</h3>
-                <p class="text-[10px] text-slate-400">${subtitle}</p>
-              </div>
-            </div>
-
-            <!-- Numbers 0 to 4 -->
-            <div class="grid grid-cols-5 gap-1.5 pt-1">
-        `;
-
-        for (let i = min; i <= max; i++) {
-          const isSelected = val === i;
-          const btnClass = isSelected
-            ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30 font-bold scale-105'
-            : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
-
-          h += `<button onclick="app.setAnswer('${group}', '${key}', ${i})" class="py-2.5 rounded-xl border ${btnClass} text-xs transition active:scale-95 font-semibold">${i}</button>`;
-        }
-
-        h += `</div>`;
-
-        // Explicit "Non pertinente (N/A)" button
-        const naBtnClass = isNA
-          ? 'bg-slate-700 border-slate-500 text-white font-bold ring-2 ring-slate-400/40'
-          : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700';
-
-        h += `
-          <div class="pt-1">
-            <button onclick="app.setAnswer('${group}', '${key}', 'NA')" class="w-full py-2 rounded-xl border ${naBtnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-ban text-xs ${isNA ? 'text-amber-400' : 'text-slate-500'}"></i>
-              <span>Non pertinente / N/A</span>
-            </button>
+          <div class="flex-1">
+            <h3 class="text-xs font-bold text-slate-200">${title}</h3>
+            <p class="text-[10px] text-slate-400">${subtitle}</p>
           </div>
-        </div>`;
+        </div>
+        <div class="grid grid-cols-5 gap-1.5 pt-1">
+    `;
+    for (let i = min; i <= max; i++) {
+      const isSelected = val === i;
+      const btnClass = isSelected
+        ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30 font-bold scale-105'
+        : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
+      h += `<button onclick="app.setAnswer('${group}', '${key}', ${i})" class="py-2.5 rounded-xl border ${btnClass} text-xs transition active:scale-95 font-semibold">${i}</button>`;
+    }
+    h += `</div>`;
+    const naBtnClass = isNA
+      ? 'bg-slate-700 border-slate-500 text-white font-bold ring-2 ring-slate-400/40'
+      : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700';
+    h += `
+        <div class="pt-1">
+          <button onclick="app.setAnswer('${group}', '${key}', 'NA')" class="w-full py-2 rounded-xl border ${naBtnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-ban text-xs ${isNA ? 'text-amber-400' : 'text-slate-500'}"></i>
+            <span>Non pertinente / N/A</span>
+          </button>
+        </div>
+      </div>`;
+    return h;
+  }
 
-        return h;
-      }
-
-      renderBinaryField(group, key, title, subtitle, val, icon = 'fa-check') {
-        let isNA = val === 'NA';
-        let h = `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
-            <div class="flex items-start space-x-2.5">
-              <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
-                <i class="fa-solid ${icon} text-xs"></i>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xs font-bold text-slate-200">${title}</h3>
-                <p class="text-[10px] text-slate-400">${subtitle}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 pt-1">
-        `;
-
-        const options = [
-          { label: '1 - Sì / Presente', val: 1, icon: 'fa-circle-check' },
-          { label: '0 - No / Assente', val: 0, icon: 'fa-circle-xmark' }
-        ];
-
-        options.forEach(opt => {
-          const isSelected = val === opt.val;
-          const btnClass = isSelected
-            ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30 font-bold'
-            : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
-
-          h += `
-            <button onclick="app.setAnswer('${group}', '${key}', ${opt.val})" class="py-2.5 rounded-xl border ${btnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid ${opt.icon} text-xs"></i>
-              <span>${opt.label}</span>
-            </button>
-          `;
-        });
-
-        h += `</div>`;
-
-        // "Non pertinente (N/A)" button
-        const naBtnClass = isNA
-          ? 'bg-slate-700 border-slate-500 text-white font-bold ring-2 ring-slate-400/40'
-          : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700';
-
-        h += `
-          <div class="pt-1">
-            <button onclick="app.setAnswer('${group}', '${key}', 'NA')" class="w-full py-2 rounded-xl border ${naBtnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-ban text-xs ${isNA ? 'text-amber-400' : 'text-slate-500'}"></i>
-              <span>Non pertinente / N/A</span>
-            </button>
+  renderBinaryField(group, key, title, subtitle, val, icon = 'fa-check') {
+    const isNA = val === 'NA';
+    let h = `
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
+        <div class="flex items-start space-x-2.5">
+          <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
+            <i class="fa-solid ${icon} text-xs"></i>
           </div>
-        </div>`;
-
-        return h;
-      }
-
-      renderCategoricalField(group, key, title, subtitle, options, val, icon = 'fa-list') {
-        let isNA = val === 'NA';
-        let h = `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
-            <div class="flex items-start space-x-2.5">
-              <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
-                <i class="fa-solid ${icon} text-xs"></i>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xs font-bold text-slate-200">${title}</h3>
-                <p class="text-[10px] text-slate-400">${subtitle || 'Seleziona una delle opzioni ammesse'}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-1.5 pt-1">
-        `;
-
-        options.forEach(opt => {
-          const isSelected = val === opt;
-          const btnClass = isSelected
-            ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30 font-bold'
-            : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
-
-          h += `
-            <button onclick="app.setAnswer('${group}', '${key}', '${opt}')" class="py-2.5 px-3 rounded-xl border ${btnClass} text-xs transition active:scale-95 text-left flex items-center justify-between">
-              <span>${opt}</span>
-              <div class="w-4 h-4 rounded-full border ${isSelected ? 'border-white bg-white/20' : 'border-slate-700'} flex items-center justify-center">
-                ${isSelected ? '<div class="w-1.5 h-1.5 rounded-full bg-white"></div>' : ''}
-              </div>
-            </button>
-          `;
-        });
-
-        h += `</div>`;
-
-        // "Non pertinente (N/A)" button
-        const naBtnClass = isNA
-          ? 'bg-slate-700 border-slate-500 text-white font-bold ring-2 ring-slate-400/40'
-          : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700';
-
-        h += `
-          <div class="pt-1">
-            <button onclick="app.setAnswer('${group}', '${key}', 'NA')" class="w-full py-2 rounded-xl border ${naBtnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-ban text-xs ${isNA ? 'text-amber-400' : 'text-slate-500'}"></i>
-              <span>Non pertinente / N/A</span>
-            </button>
+          <div class="flex-1">
+            <h3 class="text-xs font-bold text-slate-200">${title}</h3>
+            <p class="text-[10px] text-slate-400">${subtitle}</p>
           </div>
-        </div>`;
+        </div>
+        <div class="grid grid-cols-2 gap-2 pt-1">
+    `;
+    const options = [
+      { label: '1 - Si / Presente', val: 1, icon: 'fa-circle-check' },
+      { label: '0 - No / Assente', val: 0, icon: 'fa-circle-xmark' }
+    ];
+    options.forEach(opt => {
+      const isSelected = val === opt.val;
+      const btnClass = isSelected
+        ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30 font-bold'
+        : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
+      h += `
+        <button onclick="app.setAnswer('${group}', '${key}', ${opt.val})" class="py-2.5 rounded-xl border ${btnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
+          <i class="fa-solid ${opt.icon} text-xs"></i>
+          <span>${opt.label}</span>
+        </button>
+      `;
+    });
+    h += `</div>`;
+    const naBtnClass = isNA
+      ? 'bg-slate-700 border-slate-500 text-white font-bold ring-2 ring-slate-400/40'
+      : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700';
+    h += `
+        <div class="pt-1">
+          <button onclick="app.setAnswer('${group}', '${key}', 'NA')" class="w-full py-2 rounded-xl border ${naBtnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-ban text-xs ${isNA ? 'text-amber-400' : 'text-slate-500'}"></i>
+            <span>Non pertinente / N/A</span>
+          </button>
+        </div>
+      </div>`;
+    return h;
+  }
 
-        return h;
-      }
+  renderCategoricalField(group, key, title, subtitle, options, val, icon = 'fa-list') {
+    const isNA = val === 'NA';
+    let h = `
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
+        <div class="flex items-start space-x-2.5">
+          <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
+            <i class="fa-solid ${icon} text-xs"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xs font-bold text-slate-200">${title}</h3>
+            <p class="text-[10px] text-slate-400">${subtitle || 'Seleziona una delle opzioni ammesse'}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-1.5 pt-1">
+    `;
+    options.forEach(opt => {
+      const isSelected = val === opt;
+      const btnClass = isSelected
+        ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30 font-bold'
+        : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
+      h += `
+        <button onclick="app.setAnswer('${group}', '${key}', '${opt}')" class="py-2.5 px-3 rounded-xl border ${btnClass} text-xs transition active:scale-95 text-left flex items-center justify-between">
+          <span>${opt}</span>
+          <div class="w-4 h-4 rounded-full border ${isSelected ? 'border-white bg-white/20' : 'border-slate-700'} flex items-center justify-center shrink-0 ml-2">
+            ${isSelected ? '<div class="w-1.5 h-1.5 rounded-full bg-white"></div>' : ''}
+          </div>
+        </button>
+      `;
+    });
+    h += `</div>`;
+    const naBtnClass = isNA
+      ? 'bg-slate-700 border-slate-500 text-white font-bold ring-2 ring-slate-400/40'
+      : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700';
+    h += `
+        <div class="pt-1">
+          <button onclick="app.setAnswer('${group}', '${key}', 'NA')" class="w-full py-2 rounded-xl border ${naBtnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-ban text-xs ${isNA ? 'text-amber-400' : 'text-slate-500'}"></i>
+            <span>Non pertinente / N/A</span>
+          </button>
+        </div>
+      </div>`;
+    return h;
+  }
 
-      setAnswer(group, key, value) {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const anno = this.annotations[currentItem.image_id];
-        const wasAlreadyAnswered = anno[group][key] !== null && anno[group][key] !== undefined;
+  setAnswer(group, key, value) {
+    const currentItem = EXPERIMENT_DATASET[this.currentIndex];
+    const anno = this.annotations[currentItem.image_id];
+    const prevVal = this.getAnswerValue(anno, group, key);
+    const wasAlreadyAnswered = prevVal !== null && prevVal !== undefined;
 
-        anno[group][key] = value;
+    this.setAnswerValue(anno, group, key, value);
 
-        // Auto-handle NoPeople constraint
-        if (key === 'predominant_age_group' || key === 'gender_balance') {
-          if (value === 'NoPeople') {
-            anno.core_metrics.predominant_age_group = 'NoPeople';
-            anno.core_metrics.gender_balance = 'NoPeople';
-            anno.core_metrics.ethnic_diversity_index = 'NA';
-            anno.core_metrics.emotional_tone = 'NA';
-            anno.core_metrics.facial_expression_intensity = 'NA';
-            this.showToast('Rilevato "NoPeople": metriche facciali impostate a N/A');
-          }
-        }
-
-        if (!wasAlreadyAnswered) {
-          this.xp += 10;
-        }
-
-        this.checkImageCompletion(currentItem.image_id);
-        this.saveToLocalStorage();
-        this.updateGamificationUI();
-        this.renderQuestions();
-
-        // Advance to next question
-        const updatedQuestions = this.getQuestionsForImage(currentItem, anno);
-        setTimeout(() => {
-          if (this.currentQuestionIndex < updatedQuestions.length - 1) {
-            this.currentQuestionIndex++;
-            this.renderQuestions();
-          } else if (this.isImageFullyAnnotated(currentItem.image_id) && this.currentIndex < EXPERIMENT_DATASET.length - 1) {
-            this.nextImage();
-          }
-        }, 220);
-      }
-
-      checkImageCompletion(imageId) {
-        const isComplete = this.isImageFullyAnnotated(imageId);
-        if (isComplete && !this.completedImages.has(imageId)) {
-          this.completedImages.add(imageId);
-          this.streak++;
-          this.xp += 100;
-          this.triggerConfetti();
-          this.showToast(`Immagine completata! +100 XP`);
-        } else if (!isComplete && this.completedImages.has(imageId)) {
-          this.completedImages.delete(imageId);
-        }
-        this.updateCompletionPill();
-      }
-
-      updateCompletionPill() {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const pill = document.getElementById('completion-status-pill');
-        const text = document.getElementById('completion-status-text');
-
-        if (this.completedImages.has(currentItem.image_id)) {
-          pill.className = "absolute top-2.5 right-11 flex items-center space-x-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-xl px-2 py-0.5 text-[10px] font-semibold shadow-lg z-10";
-          text.innerHTML = '<i class="fa-solid fa-check text-[9px]"></i> Completata';
-        } else {
-          pill.className = "absolute top-2.5 right-11 flex items-center space-x-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-xl px-2 py-0.5 text-[10px] font-semibold shadow-lg z-10";
-          text.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[9px]"></i> Incompleta';
-        }
-      }
-
-      updateGamificationUI() {
-        document.getElementById('streak-counter').textContent = this.streak;
-        let level = Math.floor(this.xp / 400) + 1;
-        let rankTitle = "Novizio Annotatore";
-        let iconClass = "fa-solid fa-seedling text-xs";
-
-        if (level >= 5) {
-          rankTitle = "Master Coder";
-          iconClass = "fa-solid fa-crown text-xs text-amber-400";
-        } else if (level >= 3) {
-          rankTitle = "Senior Annotator";
-          iconClass = "fa-solid fa-medal text-xs text-indigo-300";
-        } else if (level >= 2) {
-          rankTitle = "Analista Junior";
-          iconClass = "fa-solid fa-star text-xs text-violet-300";
-        }
-
-        document.getElementById('user-level-badge').textContent = `Lvl ${level}`;
-        document.getElementById('user-rank-title').textContent = rankTitle;
-        document.getElementById('user-rank-icon').className = iconClass;
-
-        const xpInCurrentLevel = this.xp % 400;
-        const progressPercent = (xpInCurrentLevel / 400) * 100;
-        document.getElementById('xp-progress-bar').style.width = `${progressPercent}%`;
-      }
-
-      triggerConfetti() {
-        try {
-          confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-        } catch(e) {}
-      }
-
-      nextImage() {
-        if (this.currentIndex < EXPERIMENT_DATASET.length - 1) {
-          this.currentIndex++;
-          this.saveToLocalStorage();
-          this.currentQuestionIndex = 0;
-          this.loadCurrentImage();
-        } else {
-          this.showToast('Sei all ultima immagine del dataset!');
-        }
-      }
-
-      prevImage() {
-        if (this.currentIndex > 0) {
-          this.currentIndex--;
-          this.saveToLocalStorage();
-          this.currentQuestionIndex = 0;
-          this.loadCurrentImage();
-        }
-      }
-
-      tryOpenSummaryModal() {
-        this.recalculateCompletedSet();
-        const incomplete = [];
-
-        EXPERIMENT_DATASET.forEach((item, idx) => {
-          if (!this.completedImages.has(item.image_id)) {
-            const anno = this.annotations[item.image_id];
-            const qs = this.getQuestionsForImage(item, anno);
-            const missingCount = qs.filter(q => anno[q.group][q.key] === null || anno[q.group][q.key] === undefined).length;
-            incomplete.push({ index: idx + 1, id: item.image_id, name: item.scenario_name, missing: missingCount });
-          }
-        });
-
-        if (incomplete.length > 0) {
-          const container = document.getElementById('incomplete-list-container');
-          let html = `<p class="font-semibold text-amber-400 mb-1 flex items-center space-x-1.5"><i class="fa-solid fa-triangle-exclamation"></i><span>Mancano ${incomplete.length} immagini da completare:</span></p><ul class="space-y-1.5 pt-1">`;
-          incomplete.forEach(inc => {
-            html += `
-              <li class="flex items-center justify-between bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-800 cursor-pointer hover:bg-slate-850 transition" onclick="app.jumpToImage(${inc.index - 1})">
-                <div class="flex items-center space-x-2">
-                  <i class="fa-solid fa-image text-indigo-400 text-xs"></i>
-                  <div>
-                    <span class="font-semibold text-white block">#${inc.index} - ${inc.name}</span>
-                    <span class="text-[10px] text-amber-400/90">${inc.missing} domand${inc.missing === 1 ? 'a mancante' : 'e mancanti'}</span>
-                  </div>
-                </div>
-                <span class="text-indigo-400 text-[10px] font-bold">Completa &rarr;</span>
-              </li>
-            `;
-          });
-          html += `</ul>`;
-          container.innerHTML = html;
-          document.getElementById('incomplete-modal').classList.remove('opacity-0', 'pointer-events-none');
-        } else {
-          try {
-            confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-          } catch(e){}
-
-          const modal = document.getElementById('summary-modal');
-          const container = document.getElementById('summary-content');
-          const payload = {
-            study: "Pilot Studio Bias Ideologico - Valutazione Umana",
-            coder_id: document.getElementById('coder-id-input').value || "coder1",
-            timestamp: new Date().toISOString(),
-            total_annotated: this.completedImages.size,
-            annotations: Object.values(this.annotations)
-          };
-          container.textContent = JSON.stringify(payload, null, 2);
-          modal.classList.remove('opacity-0', 'pointer-events-none');
-        }
-      }
-
-      jumpToImage(index) {
-        this.closeIncompleteModal();
-        this.currentIndex = index;
-        this.saveToLocalStorage();
-        this.loadCurrentImage(true);
-      }
-
-      closeIncompleteModal() {
-        document.getElementById('incomplete-modal').classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      closeSummaryModal() {
-        document.getElementById('summary-modal').classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      setupZoomPanEvents() {
-        const wrapper = document.getElementById('canvas-wrapper');
-        wrapper.addEventListener('mousedown', (e) => {
-          this.isDragging = true;
-          this.startX = e.clientX - this.pointX;
-          this.startY = e.clientY - this.pointY;
-        });
-
-        window.addEventListener('mousemove', (e) => {
-          if (!this.isDragging) return;
-          e.preventDefault();
-          this.pointX = e.clientX - this.startX;
-          this.pointY = e.clientY - this.startY;
-          this.updateTransform();
-        });
-
-        window.addEventListener('mouseup', () => { this.isDragging = false; });
-
-        let initialDist = null;
-        wrapper.addEventListener('touchstart', (e) => {
-          if (e.touches.length === 1) {
-            this.isDragging = true;
-            this.startX = e.touches[0].clientX - this.pointX;
-            this.startY = e.touches[0].clientY - this.pointY;
-          } else if (e.touches.length === 2) {
-            this.isDragging = false;
-            initialDist = Math.hypot(
-              e.touches[0].clientX - e.touches[1].clientX,
-              e.touches[0].clientY - e.touches[1].clientY
-            );
-          }
-        }, { passive: true });
-
-        wrapper.addEventListener('touchmove', (e) => {
-          if (this.isDragging && e.touches.length === 1) {
-            this.pointX = e.touches[0].clientX - this.startX;
-            this.pointY = e.touches[0].clientY - this.startY;
-            this.updateTransform();
-          } else if (e.touches.length === 2 && initialDist) {
-            const currentDist = Math.hypot(
-              e.touches[0].clientX - e.touches[1].clientX,
-              e.touches[0].clientY - e.touches[1].clientY
-            );
-            const factor = currentDist / initialDist;
-            initialDist = currentDist;
-            this.zoomImage((factor - 1) * 0.5);
-          }
-        }, { passive: true });
-
-        wrapper.addEventListener('touchend', () => {
-          this.isDragging = false;
-          initialDist = null;
-        });
-      }
-
-      zoomImage(delta) {
-        this.scale = Math.max(1, Math.min(5, this.scale + delta));
-        if (this.scale === 1) { this.pointX = 0; this.pointY = 0; }
-        this.updateTransform();
-        document.getElementById('zoom-level-badge').textContent = `${Math.round(this.scale * 100)}%`;
-      }
-
-      resetZoom() {
-        this.scale = 1;
-        this.pointX = 0;
-        this.pointY = 0;
-        this.updateTransform();
-        document.getElementById('zoom-level-badge').textContent = `100%`;
-      }
-
-      updateTransform() {
-        const img = document.getElementById('target-image');
-        img.style.transform = `translate(${this.pointX}px, ${this.pointY}px) scale(${this.scale})`;
-      }
-
-      toggleImageViewer() {
-        this.isViewerCollapsed = !this.isViewerCollapsed;
-        const container = document.getElementById('image-viewer-container');
-        const icon = document.getElementById('viewer-toggle-icon');
-        if (this.isViewerCollapsed) {
-          container.style.height = '48px';
-          icon.className = 'fa-solid fa-chevron-down text-[10px]';
-        } else {
-          container.style.height = '32vh';
-          icon.className = 'fa-solid fa-chevron-up text-[10px]';
-        }
-      }
-
-      openCodebookModal() {
-        document.getElementById('codebook-modal').classList.remove('opacity-0', 'pointer-events-none');
-      }
-
-      closeCodebookModal() {
-        document.getElementById('codebook-modal').classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      copyJSON() {
-        const coderId = document.getElementById('coder-id-input').value || "coder1";
-        const payload = JSON.stringify({
-          coder_id: coderId,
-          timestamp: new Date().toISOString(),
-          annotations: Object.values(this.annotations)
-        }, null, 2);
-
-        const textArea = document.createElement("textarea");
-        textArea.value = payload;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand('copy');
-          this.showToast('JSON copiato negli appunti!');
-        } catch(e) {
-          this.showToast('Errore durante la copia', 'error');
-        }
-        document.body.removeChild(textArea);
-      }
-
-      // Exports all 27 standard columns, STRICTLY BLOCKED until 100% completed (all 195 images)
-      exportCSV(isPartial = false) {
-        this.recalculateCompletedSet();
-        if (this.completedImages.size < EXPERIMENT_DATASET.length) {
-          const missing = EXPERIMENT_DATASET.length - this.completedImages.size;
-          this.showToast(`Bloccato: mancano ancora ${missing} immagini da completare!`, 'error');
-          this.tryOpenSummaryModal();
-          return;
-        }
-        const coderId = document.getElementById('coder-id-input')?.value || "coder1";
-        const headers = [
-          "coder_id", "image_id", "scenario_id",
-          "predominant_age_group", "gender_balance", "ethnic_diversity_index", "socio_economic_status",
-          "emotional_tone", "facial_expression_intensity", "institutional_character",
-          "national_symbols", "european_union_symbols", "religious_traditional_icons",
-          "public_debate_tension", "political_figure_present",
-          "crowd_density", "crowd_enthusiasm", "public_safety_presence", "assembly_orderliness",
-          "interaction_empathy", "citizen_vulnerability_index", "journalist_stance", "corporate_vs_grassroots",
-          "facility_modernity", "economic_strain", "intergroup_mixing", "renewable_tech_prominence",
-          "coder_notes"
-        ];
-
-        let csv = headers.join(",") + "\n";
-
-        Object.values(this.annotations).forEach(anno => {
-          const cm = anno.core_metrics || {};
-          const sm = anno.scenario_specific_metrics || {};
-          const notes = (anno.coder_notes || "").replace(/"/g, '""');
-
-          const fmt = (v) => {
-            if (v === null || v === undefined) return "";
-            if (v === "NA") return "NA";
-            return `"${v}"`;
-          };
-
-          const fmtNum = (v) => {
-            if (v === null || v === undefined) return "";
-            if (v === "NA") return "NA";
-            return v;
-          };
-
-          const row = [
-            `"${coderId}"`,
-            `"${anno.image_id}"`,
-            anno.scenario_id,
-            fmt(cm.predominant_age_group),
-            fmt(cm.gender_balance),
-            fmtNum(cm.ethnic_diversity_index),
-            fmtNum(cm.socio_economic_status),
-            fmtNum(cm.emotional_tone),
-            fmtNum(cm.facial_expression_intensity),
-            fmtNum(cm.institutional_character),
-            fmtNum(cm.national_symbols),
-            fmtNum(cm.european_union_symbols),
-            fmtNum(cm.religious_traditional_icons),
-            fmtNum(cm.public_debate_tension),
-            fmtNum(cm.political_figure_present),
-            fmtNum(sm.crowd_density),
-            fmtNum(sm.crowd_enthusiasm),
-            fmtNum(sm.public_safety_presence),
-            fmtNum(sm.assembly_orderliness),
-            fmtNum(sm.interaction_empathy),
-            fmtNum(sm.citizen_vulnerability_index),
-            fmt(sm.journalist_stance),
-            fmt(sm.corporate_vs_grassroots),
-            fmtNum(sm.facility_modernity),
-            fmtNum(sm.economic_strain),
-            fmtNum(sm.intergroup_mixing),
-            fmtNum(sm.renewable_tech_prominence),
-            `"${notes}"`
-          ];
-
-          csv += row.join(",") + "\n";
-        });
-
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `${coderId}_${isPartial ? "partial_" : ""}annotations_${new Date().toISOString().slice(0,10)}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        this.showToast('File CSV scaricato con successo!');
-      }
-
-      showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        document.getElementById('toast-message').textContent = message;
-        const icon = document.getElementById('toast-icon');
-        icon.className = type === 'error' ? 'text-rose-400 fa-solid fa-circle-exclamation' : 'text-emerald-400 fa-solid fa-circle-check';
-        toast.classList.remove('-translate-y-20', 'opacity-0');
-        toast.classList.add('translate-y-0', 'opacity-100');
-        setTimeout(() => {
-          toast.classList.remove('translate-y-0', 'opacity-100');
-          toast.classList.add('-translate-y-20', 'opacity-0');
-        }, 2500);
+    if (key === 'predominant_age_group' || key === 'gender_balance') {
+      if (value === 'NoPeople') {
+        anno.core_metrics.predominant_age_group = 'NoPeople';
+        anno.core_metrics.gender_balance = 'NoPeople';
+        anno.core_metrics.ethnic_diversity_index = 'NA';
+        anno.core_metrics.emotional_tone = 'NA';
+        anno.core_metrics.facial_expression_intensity = 'NA';
+        this.showToast('Rilevato "NoPeople": metriche facciali impostate a N/A');
       }
     }
 
-    let app;
-    window.onload = () => {
-      app = new CodebookAnnotatorApp();
+    if (!wasAlreadyAnswered) {
+      this.xp += 10;
+    }
+
+    this.checkImageCompletion(currentItem.image_id);
+    this.saveToLocalStorage();
+    this.updateGamificationUI();
+    this.renderQuestions();
+
+    const updatedQuestions = this.getQuestionsForImage(currentItem, anno);
+    setTimeout(() => {
+      if (this.currentQuestionIndex < updatedQuestions.length - 1) {
+        this.currentQuestionIndex++;
+        this.renderQuestions();
+      } else if (this.isImageFullyAnnotated(currentItem.image_id) && this.currentIndex < EXPERIMENT_DATASET.length - 1) {
+        this.nextImage();
+      }
+    }, 220);
+  }
+
+  checkImageCompletion(imageId) {
+    const isComplete = this.isImageFullyAnnotated(imageId);
+    if (isComplete && !this.completedImages.has(imageId)) {
+      this.completedImages.add(imageId);
+      this.streak++;
+      this.xp += 100;
+      this.triggerConfetti();
+      this.showToast('Immagine completata! +100 XP');
+    } else if (!isComplete && this.completedImages.has(imageId)) {
+      this.completedImages.delete(imageId);
+    }
+    this.updateCompletionPill();
+  }
+
+  updateCompletionPill() {
+    const currentItem = EXPERIMENT_DATASET[this.currentIndex];
+    const pill = document.getElementById('completion-status-pill');
+    const text = document.getElementById('completion-status-text');
+    if (this.completedImages.has(currentItem.image_id)) {
+      pill.className = "absolute top-2.5 right-11 flex items-center space-x-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-xl px-2 py-0.5 text-[10px] font-semibold shadow-lg z-10";
+      text.innerHTML = '<i class="fa-solid fa-check text-[9px]"></i> Completata';
+    } else {
+      pill.className = "absolute top-2.5 right-11 flex items-center space-x-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-xl px-2 py-0.5 text-[10px] font-semibold shadow-lg z-10";
+      text.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[9px]"></i> Incompleta';
+    }
+  }
+
+  updateGamificationUI() {
+    document.getElementById('streak-counter').textContent = this.streak;
+    let level = Math.floor(this.xp / 400) + 1;
+    let rankTitle = "Novizio Annotatore";
+    let iconClass = "fa-solid fa-seedling text-xs";
+    if (level >= 5) {
+      rankTitle = "Master Coder";
+      iconClass = "fa-solid fa-crown text-xs text-amber-400";
+    } else if (level >= 3) {
+      rankTitle = "Senior Annotator";
+      iconClass = "fa-solid fa-medal text-xs text-indigo-300";
+    } else if (level >= 2) {
+      rankTitle = "Analista Junior";
+      iconClass = "fa-solid fa-star text-xs text-violet-300";
+    }
+    document.getElementById('user-level-badge').textContent = `Lvl ${level}`;
+    document.getElementById('user-rank-title').textContent = rankTitle;
+    document.getElementById('user-rank-icon').className = iconClass;
+    const xpInCurrentLevel = this.xp % 400;
+    document.getElementById('xp-progress-bar').style.width = `${(xpInCurrentLevel / 400) * 100}%`;
+  }
+
+  triggerConfetti() {
+    try { confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } }); } catch (e) {}
+  }
+
+  nextImage() {
+    if (this.currentIndex < EXPERIMENT_DATASET.length - 1) {
+      this.currentIndex++;
+      this.currentQuestionIndex = 0;
+      this.loadCurrentImage();
+    } else {
+      this.showToast('Sei all ultima immagine del dataset!');
+    }
+  }
+
+  prevImage() {
+    if (this.currentIndex > 0) {
+      this.currentIndex--;
+      this.currentQuestionIndex = 0;
+      this.loadCurrentImage();
+    }
+  }
+
+  tryOpenSummaryModal() {
+    this.recalculateCompletedSet();
+    const incomplete = [];
+    EXPERIMENT_DATASET.forEach((item, idx) => {
+      if (!this.completedImages.has(item.image_id)) {
+        const anno = this.annotations[item.image_id];
+        const qs = this.getQuestionsForImage(item, anno);
+        const missingCount = qs.filter(q => {
+          const v = this.getAnswerValue(anno, q.group, q.key);
+          return v === null || v === undefined;
+        }).length;
+        incomplete.push({ index: idx + 1, id: item.image_id, name: item.scenario_name, missing: missingCount });
+      }
+    });
+
+    if (incomplete.length > 0) {
+      const container = document.getElementById('incomplete-list-container');
+      let html = `<p class="font-semibold text-amber-400 mb-1 flex items-center space-x-1.5"><i class="fa-solid fa-triangle-exclamation"></i><span>Mancano ${incomplete.length} immagini da completare:</span></p><ul class="space-y-1.5 pt-1">`;
+      incomplete.forEach(inc => {
+        html += `
+          <li class="flex items-center justify-between bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-800 cursor-pointer hover:bg-slate-850 transition" onclick="app.jumpToImage(${inc.index - 1})">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-image text-indigo-400 text-xs"></i>
+              <div>
+                <span class="font-semibold text-white block">#${inc.index} - ${inc.name}</span>
+                <span class="text-[10px] text-amber-400/90">${inc.missing} domand${inc.missing === 1 ? 'a mancante' : 'e mancanti'}</span>
+              </div>
+            </div>
+            <span class="text-indigo-400 text-[10px] font-bold">Completa &rarr;</span>
+          </li>
+        `;
+      });
+      html += `</ul>`;
+      container.innerHTML = html;
+      document.getElementById('incomplete-modal').classList.remove('opacity-0', 'pointer-events-none');
+    } else {
+      try { confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } }); } catch (e) {}
+      const modal = document.getElementById('summary-modal');
+      const container = document.getElementById('summary-content');
+      const payload = {
+        study: "Pilot Studio Bias Ideologico - Codebook V2",
+        coder_id: document.getElementById('coder-id-input').value || "coder1",
+        timestamp: new Date().toISOString(),
+        total_annotated: this.completedImages.size,
+        annotations: Object.values(this.annotations)
+      };
+      container.textContent = JSON.stringify(payload, null, 2);
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+  }
+
+  jumpToImage(index) {
+    this.closeIncompleteModal();
+    this.currentIndex = index;
+    this.loadCurrentImage(true);
+  }
+
+  closeIncompleteModal() {
+    document.getElementById('incomplete-modal').classList.add('opacity-0', 'pointer-events-none');
+  }
+
+  closeSummaryModal() {
+    document.getElementById('summary-modal').classList.add('opacity-0', 'pointer-events-none');
+  }
+
+  setupZoomPanEvents() {
+    const wrapper = document.getElementById('canvas-wrapper');
+    wrapper.addEventListener('mousedown', (e) => {
+      this.isDragging = true;
+      this.startX = e.clientX - this.pointX;
+      this.startY = e.clientY - this.pointY;
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!this.isDragging) return;
+      e.preventDefault();
+      this.pointX = e.clientX - this.startX;
+      this.pointY = e.clientY - this.startY;
+      this.updateTransform();
+    });
+    window.addEventListener('mouseup', () => { this.isDragging = false; });
+
+    let initialDist = null;
+    wrapper.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        this.isDragging = true;
+        this.startX = e.touches[0].clientX - this.pointX;
+        this.startY = e.touches[0].clientY - this.pointY;
+      } else if (e.touches.length === 2) {
+        this.isDragging = false;
+        initialDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    }, { passive: true });
+    wrapper.addEventListener('touchmove', (e) => {
+      if (this.isDragging && e.touches.length === 1) {
+        this.pointX = e.touches[0].clientX - this.startX;
+        this.pointY = e.touches[0].clientY - this.startY;
+        this.updateTransform();
+      } else if (e.touches.length === 2 && initialDist) {
+        const currentDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const factor = currentDist / initialDist;
+        initialDist = currentDist;
+        this.zoomImage((factor - 1) * 0.5);
+      }
+    }, { passive: true });
+    wrapper.addEventListener('touchend', () => {
+      this.isDragging = false;
+      initialDist = null;
+    });
+  }
+
+  zoomImage(delta) {
+    this.scale = Math.max(1, Math.min(5, this.scale + delta));
+    if (this.scale === 1) { this.pointX = 0; this.pointY = 0; }
+    this.updateTransform();
+    document.getElementById('zoom-level-badge').textContent = `${Math.round(this.scale * 100)}%`;
+  }
+
+  resetZoom() {
+    this.scale = 1;
+    this.pointX = 0;
+    this.pointY = 0;
+    this.updateTransform();
+    document.getElementById('zoom-level-badge').textContent = `100%`;
+  }
+
+  updateTransform() {
+    const img = document.getElementById('target-image');
+    img.style.transform = `translate(${this.pointX}px, ${this.pointY}px) scale(${this.scale})`;
+  }
+
+  toggleImageViewer() {
+    this.isViewerCollapsed = !this.isViewerCollapsed;
+    const container = document.getElementById('image-viewer-container');
+    const icon = document.getElementById('viewer-toggle-icon');
+    if (this.isViewerCollapsed) {
+      container.style.height = '48px';
+      icon.className = 'fa-solid fa-chevron-down text-[10px]';
+    } else {
+      container.style.height = '42vh';
+      icon.className = 'fa-solid fa-chevron-up text-[10px]';
+    }
+  }
+
+  openCodebookModal() {
+    document.getElementById('codebook-modal').classList.remove('opacity-0', 'pointer-events-none');
+  }
+
+  closeCodebookModal() {
+    document.getElementById('codebook-modal').classList.add('opacity-0', 'pointer-events-none');
+  }
+
+  copyJSON() {
+    const coderId = document.getElementById('coder-id-input').value || "coder1";
+    const payload = JSON.stringify({
+      coder_id: coderId,
+      codebook_version: "V2",
+      timestamp: new Date().toISOString(),
+      annotations: Object.values(this.annotations)
+    }, null, 2);
+    const textArea = document.createElement("textarea");
+    textArea.value = payload;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      this.showToast('JSON copiato negli appunti!');
+    } catch (e) {
+      this.showToast('Errore durante la copia', 'error');
+    }
+    document.body.removeChild(textArea);
+  }
+
+  // Esporta tutte le 44 colonne del Codebook V2, 100% allineate a calculate_reliability.py
+  exportCSV() {
+    const coderId = document.getElementById('coder-id-input').value || "coder1";
+    const headers = [
+      "coder_id",
+      "image_id",
+      "scenario_id",
+      ...CORE_KEYS_V2,
+      ...SPECIFIC_KEYS_V2,
+      "real_entity_present",
+      "coder_notes"
+    ];
+
+    const fmtCell = (v) => {
+      if (v === null || v === undefined || v === "NA") return "";
+      if (typeof v === "number") return String(v);
+      return `"${String(v).replace(/"/g, '""')}"`;
     };
+
+    let csv = headers.join(",") + "\n";
+
+    Object.values(this.annotations).forEach(anno => {
+      const cm = anno.core_metrics || {};
+      const sm = anno.scenario_specific_metrics || {};
+      const row = [
+        fmtCell(coderId),
+        fmtCell(anno.image_id),
+        anno.scenario_id,
+        ...CORE_KEYS_V2.map(k => fmtCell(cm[k])),
+        ...SPECIFIC_KEYS_V2.map(k => fmtCell(sm[k])),
+        fmtCell(anno.real_entity_present),
+        fmtCell(anno.coder_notes || "")
+      ];
+      csv += row.join(",") + "\n";
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${coderId}_annotations_v2_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.showToast('File CSV (Codebook V2) scaricato!');
+  }
+
+  showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-message').textContent = message;
+    const icon = document.getElementById('toast-icon');
+    icon.className = type === 'error'
+      ? 'text-rose-400 fa-solid fa-circle-exclamation'
+      : 'text-emerald-400 fa-solid fa-circle-check';
+    toast.classList.remove('-translate-y-20', 'opacity-0');
+    toast.classList.add('translate-y-0', 'opacity-100');
+    setTimeout(() => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('-translate-y-20', 'opacity-0');
+    }, 2500);
+  }
+}
+
+let app;
+window.onload = () => {
+  app = new CodebookAnnotatorApp();
+};
   </script>
 </body>
 </html>
