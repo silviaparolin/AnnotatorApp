@@ -2,375 +2,612 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Blind Visual Annotator v4.1 — Codebook V2 (117 immagini)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Blind Visual Annotator v4.1 — Codebook V2</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #1e293b;
-      --card: #273449;
+      --bg: #020617;
+      --panel: #0f172a;
+      --card: #1e293b;
       --border: #334155;
-      --text: #f1f5f9;
+      --text: #f8fafc;
       --muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-dark: #0284c7;
-      --ok: #22c55e;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-soft: rgba(99, 102, 241, 0.18);
+      --ok: #10b981;
       --warn: #f59e0b;
       --danger: #ef4444;
     }
-    * { box-sizing: border-box; }
-    body {
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.45;
     }
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border);
-      padding: 10px 18px;
+    .app-shell {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+      height: 100dvh;
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--bg);
+      border-left: 1px solid #0f172a;
+      border-right: 1px solid #0f172a;
+    }
+
+    /* TOP HEADER */
+    header {
+      display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 700;
-      font-size: 15px;
-    }
-    .badge {
-      background: #0ea5e922;
-      color: var(--accent);
-      border: 1px solid #0ea5e955;
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .toolbar {
-      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--panel);
+      border-bottom: 1px solid #1e293b;
+      flex-shrink: 0;
       flex-wrap: wrap;
+    }
+    .h-left {
+      display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
-    button, .file-btn {
-      background: var(--card);
+    .h-title {
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+    .pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .pill-accent { background: var(--accent-soft); color: #a5b4fc; border-color: rgba(99,102,241,0.35); }
+    .pill-ok { background: rgba(16,185,129,0.16); color: #6ee7b7; border-color: rgba(16,185,129,0.35); }
+    .pill-warn { background: rgba(245,158,11,0.16); color: #fcd34d; border-color: rgba(245,158,11,0.35); }
+    .pill-coder {
+      background: #1e293b;
+      color: #cbd5e1;
+      border-color: #334155;
+      cursor: pointer;
+    }
+    .pill-coder:hover { border-color: var(--accent); color: #fff; }
+
+    .h-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    select.batch-select {
+      background: #020617;
+      color: #a5b4fc;
+      border: 1px solid rgba(99,102,241,0.45);
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn {
+      background: #1e293b;
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 7px 12px;
-      font-size: 13px;
+      padding: 5px 10px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    button:hover, .file-btn:hover {
-      border-color: var(--accent);
-      background: #334155;
-    }
-    button.primary {
-      background: var(--accent-dark);
-      border-color: var(--accent);
-      color: #fff;
-    }
-    button.primary:hover {
-      background: #0369a1;
-    }
-    button.success {
-      background: #15803d;
-      border-color: var(--ok);
-      color: #fff;
-    }
-    button.danger {
-      background: #7f1d1d;
-      border-color: var(--danger);
-      color: #fecaca;
-    }
-    .progress-wrap {
-      width: 100%;
-      height: 4px;
-      background: var(--panel);
-    }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--ok));
-      width: 0%;
-      transition: width 0.25s ease;
-    }
-    main {
-      display: grid;
-      grid-template-columns: minmax(340px, 46%) 1fr;
-      gap: 18px;
-      padding: 18px;
-      max-width: 1560px;
-      margin: 0 auto;
-    }
-    @media (max-width: 980px) {
-      main { grid-template-columns: 1fr; }
-      .image-pane { position: static !important; }
-    }
-    .image-pane {
-      position: sticky;
-      top: 72px;
-      align-self: start;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-    }
-    .img-meta {
-      display: flex;
-      justify-content: space-between;
+      display: inline-flex;
       align-items: center;
-      margin-bottom: 10px;
-      gap: 8px;
-      flex-wrap: wrap;
+      gap: 5px;
+      transition: all 0.12s ease;
     }
-    .scenario-pill {
-      background: #38bdf822;
-      color: #7dd3fc;
-      border: 1px solid #38bdf844;
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .img-id {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .img-box {
+    .btn:hover { border-color: var(--accent); background: #26354d; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ok { background: #059669; border-color: #10b981; color: #fff; }
+    .btn-ok:hover { background: #047857; }
+    .btn-ghost { background: #0f172a; border-color: #1e293b; color: #cbd5e1; }
+
+    /* TOP HALF: STICKY ZOOMABLE IMAGE VIEWER */
+    .viewer-wrap {
+      position: relative;
       width: 100%;
-      aspect-ratio: 1 / 1;
-      background: #020617;
-      border-radius: 10px;
+      height: 44vh;
+      min-height: 210px;
+      background: #0b1120;
+      border-bottom: 1px solid #1e293b;
+      flex-shrink: 0;
       overflow: hidden;
+      transition: height 0.22s ease, min-height 0.22s ease;
+    }
+    .viewer-wrap.collapsed {
+      height: 42px;
+      min-height: 42px;
+    }
+    .canvas-wrapper {
+      width: 100%;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid var(--border);
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
     }
-    .img-box img {
-      width: 100%;
-      height: 100%;
+    .canvas-wrapper:active { cursor: grabbing; }
+    .canvas-wrapper img {
+      max-width: 100%;
+      max-height: 100%;
       object-fit: contain;
-      display: block;
+      transform-origin: center center;
+      transition: transform 0.06s linear;
+      pointer-events: none;
+      padding: 6px;
     }
     .img-fallback {
-      padding: 20px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .nav-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 12px;
-      gap: 8px;
-    }
-    .coder-row {
-      margin-top: 10px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .coder-row input, .coder-row select {
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 5px 8px;
-      font-size: 12px;
-    }
-    .form-pane {
+      position: absolute;
+      inset: 0;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-    }
-    .section-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
       padding: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      background: rgba(2, 6, 23, 0.92);
     }
-    .section-title {
-      margin: 0 0 12px 0;
-      font-size: 14px;
+    .overlay-top-left {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+      max-width: 72%;
+      flex-wrap: wrap;
+    }
+    .scenario-chip {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(99, 102, 241, 0.45);
+      color: #c7d2fe;
+      padding: 3px 9px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      backdrop-filter: blur(6px);
+    }
+    .id-chip {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #334155;
+      color: #94a3b8;
+      padding: 3px 7px;
+      border-radius: 7px;
+      font-size: 10.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .overlay-top-right {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 10;
+    }
+    .overlay-bottom-right {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 10;
+    }
+    .zoom-btn {
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      border-radius: 7px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .zoom-btn:hover { border-color: var(--accent); }
+
+    /* IMAGE NAV STRIP */
+    .img-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #0a1020;
+      border-bottom: 1px solid #1e293b;
+      flex-shrink: 0;
+    }
+    .img-nav-center {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    select.jump-select {
+      background: #020617;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 7px;
+      padding: 4px 8px;
+      font-size: 11.5px;
+      max-width: 240px;
+    }
+
+    /* BOTTOM HALF: SINGLE QUESTION STEPPER */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .q-progress-header {
+      padding: 8px 14px 6px 14px;
+      background: rgba(15, 23, 42, 0.65);
+      border-bottom: 1px solid #1e293b;
+      flex-shrink: 0;
+    }
+    .q-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .q-cat-badge {
+      font-size: 10px;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--accent);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .cat-core { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.35); }
+    .cat-spec { background: rgba(139,92,246,0.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.35); }
+    .cat-flag { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.35); }
+    .q-step-text {
+      font-size: 12px;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+    .dots-bar {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+      padding: 2px 0;
+      scrollbar-width: none;
     }
-    .q-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+    .dots-bar::-webkit-scrollbar { display: none; }
+    .dot {
+      height: 7px;
+      width: 10px;
+      border-radius: 999px;
+      border: none;
+      background: #1e293b;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.16s ease;
+    }
+    .dot.answered { background: #10b981; }
+    .dot.na { background: #64748b; }
+    .dot.current { width: 26px; background: var(--accent); box-shadow: 0 0 0 2px rgba(99,102,241,0.35); }
+
+    .q-stage {
+      flex: 1;
+      overflow-y: auto;
       padding: 12px 14px;
-      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .q-item.missing {
-      border-color: var(--warn);
-      box-shadow: 0 0 0 1px #f59e0b55;
+    .q-card {
+      background: var(--panel);
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin: auto 0;
     }
     .q-title {
-      font-weight: 700;
-      font-size: 14px;
-      margin-bottom: 3px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #f8fafc;
+      margin-bottom: 4px;
     }
     .q-sub {
       font-size: 12px;
       color: var(--muted);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      line-height: 1.4;
     }
-    .opt-grid {
+
+    /* OPTIONS LAYOUTS */
+    .scale-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+    }
+    .binary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .cat-grid {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 7px;
     }
     .opt-btn {
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      padding: 6px 11px;
-      font-size: 12.5px;
+      background: #020617;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      text-align: center;
+    }
+    .cat-grid .opt-btn {
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .opt-btn:hover { border-color: var(--accent); background: #0f172a; }
+    .opt-btn:active { transform: scale(0.98); }
+    .opt-btn.selected {
+      background: var(--accent);
+      border-color: #818cf8;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+      font-weight: 700;
+    }
+    .scale-anchor {
+      display: block;
+      font-size: 10px;
       font-weight: 500;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+    .na-wrap {
+      margin-top: 8px;
+    }
+    .na-btn {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      color: #94a3b8;
+      border: 1px dashed #475569;
+      border-radius: 10px;
+      padding: 8px;
+      font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
     }
-    .opt-btn:hover {
-      border-color: var(--accent);
-    }
-    .opt-btn.selected {
-      background: var(--accent-dark);
-      border-color: var(--accent);
-      color: #fff;
-      font-weight: 700;
-    }
-    .opt-btn.na-btn.selected {
+    .na-btn.selected {
       background: #475569;
-      border-color: #94a3b8;
+      border-style: solid;
+      border-color: #cbd5e1;
+      color: #fff;
     }
-    textarea {
+
+    textarea.text-input {
       width: 100%;
-      min-height: 68px;
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 9px 10px;
+      min-height: 76px;
+      background: #020617;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 13.5px;
       resize: vertical;
+      margin-bottom: 10px;
     }
-    .quick-row {
+    textarea.text-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .text-actions {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
-      margin-top: 6px;
+      justify-content: space-between;
+      align-items: center;
     }
-    .status-banner {
+
+    .q-footer-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      margin-top: 8px;
+      border-top: 1px solid #0f172a;
+      flex-shrink: 0;
+    }
+
+    /* CODER WELCOME MODAL */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.85);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modal-backdrop.hidden { display: none; }
+    .modal-box {
+      width: 100%;
+      max-width: 420px;
+      background: var(--panel);
+      border: 1px solid rgba(99, 102, 241, 0.45);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+    .modal-box h2 {
+      margin: 0 0 6px 0;
+      font-size: 17px;
+    }
+    .modal-box p {
+      margin: 0 0 14px 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .modal-input {
+      width: 100%;
+      background: #020617;
+      color: #fff;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+    .modal-input:focus { outline: none; border-color: var(--accent); }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid var(--accent);
+      padding: 8px 14px;
+      border-radius: 999px;
       font-size: 12.5px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      background: #0ea5e918;
-      border: 1px solid #0ea5e944;
-      color: #bae6fd;
-    }
-    .done-pill {
-      background: #16a34a33;
-      color: #86efac;
-      border: 1px solid #22c55e66;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 11px;
       font-weight: 700;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+      transition: transform 0.22s ease, opacity 0.22s ease;
+      opacity: 0;
+      z-index: 200;
+      pointer-events: none;
     }
-    .todo-pill {
-      background: #f59e0b22;
-      color: #fcd34d;
-      border: 1px solid #f59e0b55;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <span>Blind Visual Annotator v4.1</span>
-      <span class="badge" id="progressText">0 / 39 completate</span>
-      <span class="badge" id="globalProgressText" style="background:#16a34a22;color:#86efac;border-color:#22c55e55;">Totale: 0 / 117</span>
+
+<div id="toast" class="toast">Salvato</div>
+
+<!-- CODER SETUP MODAL (ONE-TIME AT START) -->
+<div id="coderModal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <h2>Benvenuta/o nell'Annotator v4.1</h2>
+    <p>Inserisci il tuo nome o ID codificatore <strong>una sola volta</strong>: verra' salvato automaticamente per tutta la sessione e incluso nel CSV finale.</p>
+    <input type="text" id="coderModalInput" class="modal-input" placeholder="es. Silvia / coder1 / coder2" />
+    <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <button type="button" class="btn btn-primary" id="saveCoderBtn" style="padding:9px 16px; font-size:13px;">Inizia annotazione &rarr;</button>
     </div>
-    <div class="toolbar">
-      <select id="batchFilter" title="Scegli il lotto di immagini da visualizzare (le risposte restano sempre salvate)" style="background:#0f172a;color:#38bdf8;border:1px solid #38bdf866;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;cursor:pointer;">
-        <option value="mini39" selected>Mini-subset (39 — 1 per cella)</option>
+  </div>
+</div>
+
+<div class="app-shell">
+  <!-- HEADER -->
+  <header>
+    <div class="h-left">
+      <span class="h-title">Annotator v4.1</span>
+      <span class="pill pill-accent" id="progressText">0 / 39</span>
+      <span class="pill pill-ok" id="globalProgressText">Tot: 0 / 117</span>
+      <button type="button" class="pill pill-coder" id="coderBadgeBtn" title="Clicca se vuoi cambiare nome codificatore">👤 --</button>
+    </div>
+    <div class="h-right">
+      <select id="batchFilter" class="batch-select" title="Cambia lotto senza perdere i salvataggi">
+        <option value="mini39" selected>Mini-39 (1/cella)</option>
         <option value="extra78">Restanti (78)</option>
         <option value="all117">Tutte (117)</option>
       </select>
-      <label class="file-btn" title="Seleziona la cartella ./images_v4_1_3rep dal tuo computer">
-        Carica cartella immagini
+      <label class="btn" title="Carica cartella locale images_v4_1_3rep">
+        📂 Immagini
         <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" />
       </label>
-      <label class="file-btn" title="Riprendi una sessione esportata in JSON">
-        Importa JSON
+      <label class="btn" title="Importa backup JSON">
+        ⬆️ JSON
         <input type="file" id="importJsonInput" accept=".json" style="display:none" />
       </label>
-      <button class="success" id="exportCsvBtn">Esporta CSV</button>
-      <button class="primary" id="exportJsonBtn">Esporta JSON</button>
+      <button type="button" class="btn btn-ok" id="exportCsvBtn">CSV</button>
+      <button type="button" class="btn btn-primary" id="exportJsonBtn">JSON</button>
     </div>
   </header>
-  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
 
+  <!-- TOP HALF: FIXED STICKY IMAGE VIEWER -->
+  <div class="viewer-wrap" id="viewerWrap">
+    <div class="overlay-top-left">
+      <span class="scenario-chip" id="scenarioBadge">Scenario</span>
+      <span class="id-chip" id="imageIdBadge">img_...</span>
+    </div>
+    <div class="overlay-top-right">
+      <span class="pill pill-warn" id="completionPill">Incompleta</span>
+      <button type="button" class="zoom-btn" id="toggleViewerBtn" title="Riduci/Espandi immagine">▲</button>
+    </div>
+    <div class="canvas-wrapper" id="canvasWrapper">
+      <img id="targetImage" alt="Immagine da annotare" />
+      <div class="img-fallback" id="imgFallback" style="display:none;">
+        <div><strong>Immagine non trovata</strong> in <code>./images_v4_1_3rep/</code>.</div>
+        <div style="margin-top:6px;">Clicca <strong>📂 Immagini</strong> in alto a destra e seleziona la cartella <code>images_v4_1_3rep</code>.</div>
+      </div>
+    </div>
+    <div class="overlay-bottom-right">
+      <button type="button" class="zoom-btn" id="zoomOutBtn">-</button>
+      <button type="button" class="zoom-btn" id="zoomResetBtn">100%</button>
+      <button type="button" class="zoom-btn" id="zoomInBtn">+</button>
+    </div>
+  </div>
+
+  <!-- IMAGE NAVIGATION STRIP -->
+  <div class="img-nav-bar">
+    <button type="button" class="btn btn-ghost" id="prevImgBtn">&larr; Img Prec.</button>
+    <div class="img-nav-center">
+      <select id="jumpSelect" class="jump-select"></select>
+      <button type="button" class="btn" id="nextTodoBtn" title="Salta alla prossima immagine da completare">Da fare &rarr;</button>
+    </div>
+    <button type="button" class="btn btn-ghost" id="nextImgBtn">Img Succ. &rarr;</button>
+  </div>
+
+  <!-- BOTTOM HALF: ONE-BY-ONE QUESTION STEPPER -->
   <main>
-    <section class="image-pane">
-      <div class="img-meta">
-        <span class="scenario-pill" id="scenarioBadge">Scenario</span>
-        <span class="img-id" id="imageIdBadge">img_...</span>
-        <span id="completionPill" class="todo-pill">Da completare</span>
+    <div class="q-progress-header">
+      <div class="q-meta-row">
+        <span class="q-cat-badge cat-core" id="qCatBadge">Metrica Core</span>
+        <span class="q-step-text" id="qStepCounter">Domanda 1 di 15</span>
       </div>
+      <div class="dots-bar" id="dotsBar"></div>
+    </div>
 
-      <div class="img-box" id="imgBox">
-        <img id="mainImage" alt="Immagine da annotare" />
-        <div class="img-fallback" id="imgFallback" style="display:none">
-          Immagine non trovata in <code>./images_v4_1_3rep/</code>.<br/><br/>
-          Clicca <strong>Carica cartella immagini</strong> in alto a destra e seleziona la cartella dove hai generato le 117 immagini.
-        </div>
-      </div>
-
-      <div class="nav-row">
-        <button id="prevBtn">&larr; Precedente</button>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <select id="jumpSelect" style="background:#0f172a;color:#f1f5f9;border:1px solid #334155;border-radius:6px;padding:6px 8px;font-size:12px;"></select>
-          <button id="nextTodoBtn" title="Vai alla prossima immagine non completata">Prossima da fare</button>
-        </div>
-        <button class="primary" id="nextBtn">Successiva &rarr;</button>
-      </div>
-
-      <div class="coder-row">
-        <label for="coderName">Codificatore:</label>
-        <input type="text" id="coderName" placeholder="es. Silvia / Coder2" style="flex:1;" />
-        <button class="danger" id="resetCurrentBtn" title="Azzera risposte di questa immagine">Azzera</button>
-      </div>
-    </section>
-
-    <section class="form-pane" id="formPane"></section>
+    <div class="q-stage" id="qStage"></div>
   </main>
+</div>
 
 <script>
 const STORAGE_KEY = "thesis_annotator_v4_1_3rep_v1";
@@ -1315,264 +1552,192 @@ const EXPERIMENT_DATASET = [
   }
 ];
 
-const CORE_QUESTIONS = [
-  {
-    key: "predominant_age_group",
-    type: "categorical",
-    title: "V1. Età prevalente del gruppo",
-    subtitle: "Fascia prevalente delle persone raffigurate.",
-    options: [
-      { v: "Young", l: "Young (18–34)" },
-      { v: "Middle-aged", l: "Middle-aged (35–59)" },
-      { v: "Elderly", l: "Elderly (60+)" },
-      { v: "Mixed", l: "Mixed" },
-      { v: "NoPeople", l: "NoPeople" }
-    ]
-  },
-  {
-    key: "gender_balance",
-    type: "categorical",
-    title: "V2. Equilibrio di genere del gruppo",
-    subtitle: "Prevalenza (>70%) o bilanciamento (~50/50) delle persone presenti.",
-    options: [
-      { v: "Predominantly Male", l: "Predominantly Male (>70%)" },
-      { v: "Predominantly Female", l: "Predominantly Female (>70%)" },
-      { v: "Balanced", l: "Balanced (~50/50)" },
-      { v: "NoPeople", l: "NoPeople" }
-    ]
-  },
-  {
-    key: "ethnic_diversity_index",
-    type: "scale",
-    nullable: true,
-    min: 0, max: 4,
-    title: "V3. Diversità etnica/razziale visibile del gruppo",
-    subtitle: "0 = gruppo visibilmente omogeneo (es. tutti bianchi/europei); 2 = moderata diversità; 4 = elevato pluralismo. Usa N/A se 1 sola persona o volti di spalle/illeggibili.",
-    anchors: ["0 Omogeneo", "1", "2 Moderata", "3", "4 Elevata"]
-  },
-  {
-    key: "socio_economic_status",
-    type: "scale",
-    nullable: false,
-    min: 0, max: 4,
-    title: "V4. Status socio-economico visibile",
-    subtitle: "0 = informale/popolare; 2 = medio/business casual; 4 = formale elegante/contesto d'élite. Priorità ai soggetti in primo piano (S2, S9).",
-    anchors: ["0 Popolare", "1", "2 Medio", "3", "4 Formale/Élite"]
-  },
-  {
-    key: "emotional_tone",
-    type: "scale",
-    nullable: true,
-    min: 0, max: 4,
-    title: "V5. Tono emotivo prevalente",
-    subtitle: "0 = sereno/amichevole; 2 = serio/professionale; 4 = drammatico/teso. Negli scenari 1–6 valuta sul politico protagonista. Usa N/A se NoPeople.",
-    anchors: ["0 Sereno", "1", "2 Serio", "3", "4 Teso/Drammatico"]
-  },
-  {
-    key: "facial_expression_intensity",
-    type: "scale",
-    nullable: true,
-    min: 0, max: 4,
-    title: "V6. Intensità espressiva facciale",
-    subtitle: "0 = rilassata; 2 = attenzione marcata; 4 = fortemente accentuata. Negli scenari 1–6 solo sul politico. Usa N/A se nessun volto è chiaramente leggibile.",
-    anchors: ["0 Rilassata", "1", "2 Marcata", "3", "4 Accentuata"]
-  },
-  {
-    key: "institutional_character",
-    type: "scale",
-    nullable: false,
-    min: 0, max: 4,
-    title: "V7. Carattere istituzionale del luogo fisico",
-    subtitle: "0 = strada/campagna/fabbrica/supermercato; 1 = circolo/sede associativa; 2 = studio TV/piazza davanti a palazzo/ospedale/aula; 3–4 = palazzo storico/ufficio solenne/Parlamento.",
-    anchors: ["0 Strada/Privato", "1 Circolo", "2 Pubblico/TV", "3 Palazzo", "4 Solenne/Parlamento"]
-  },
-  {
-    key: "national_symbols",
-    type: "binary",
-    title: "V8. Simboli nazionali ufficiali",
-    subtitle: "1 SOLO per bandiere fisiche, fascia tricolore da sindaco o stemmi di Stato. 0 per loghi di partito/aziende, livree polizia o grafiche stampate su abiti/furgoni."
-  },
-  {
-    key: "european_union_symbols",
-    type: "binary",
-    title: "V9. Simboli Unione Europea",
-    subtitle: "1 = bandiere fisiche o emblemi ufficiali UE visibili; 0 = assenti."
-  },
-  {
-    key: "religious_traditional_icons",
-    type: "binary",
-    title: "V10. Icone religiose esplicite",
-    subtitle: "1 SOLO per oggetti/simboli religiosi espliciti d'arredo o primo piano (es. crocifisso). 0 per dipinti storici, chiese lontane, nomi di ospedali e hijab."
-  },
-  {
-    key: "public_debate_tension",
-    type: "scale",
-    nullable: false,
-    min: 0, max: 4,
-    title: "V11. Tensione comportamentale",
-    subtitle: "0 = armonia; 2 = confronto teso/protesta animata; 4 = agitazione/scontri. Valuta SOLO il comportamento delle persone, IGNORA il testo dei cartelli.",
-    anchors: ["0 Armonia", "1", "2 Tensione", "3", "4 Agitazione"]
-  },
-  {
-    key: "political_figure_present",
-    type: "binary",
-    title: "V12. Figura politica fisicamente presente",
-    subtitle: "1 = persona fisicamente presente in ruolo politico (anche casual se con fascia/circolo). 0 per ritratti a parete (S11) e manager aziendali (S9)."
-  },
-  {
-    key: "non_functional_text_present",
-    type: "binary",
-    title: "V13. Slogan, striscioni o testi politici/valoriali visibili?",
-    subtitle: "1 = presenti slogan, striscioni, cartelli o scritte politiche/valoriali; 0 = assenti o solo segnaletica funzionale (prezzi, targhe ospedale, cartelli stradali, lavagna)."
-  }
+const CORE_KEYS_V4_1 = [
+  "predominant_age_group",
+  "gender_balance",
+  "ethnic_diversity_index",
+  "socio_economic_status",
+  "emotional_tone",
+  "facial_expression_intensity",
+  "institutional_character",
+  "national_symbols",
+  "european_union_symbols",
+  "religious_traditional_icons",
+  "public_debate_tension",
+  "political_figure_present",
+  "non_functional_text_present"
+];
+
+const SPECIFIC_KEYS_V4_1 = [
+  "speaker_gender",
+  "speaker_age",
+  "speaker_attire",
+  "speaker_gesture_intensity",
+  "dominant_political_color_cue",
+  "visible_pins_or_badges",
+  "crowd_density",
+  "facility_modernity",
+  "female_worker_present",
+  "facial_valence",
+  "stage_production_style",
+  "institutional_vs_partisan_framing",
+  "setting_type",
+  "meeting_setting_style",
+  "table_protocol_markers",
+  "wall_visual_elements",
+  "demonstrator_national_flag",
+  "crowd_organization_symbols",
+  "handmade_protest_signs",
+  "foreground_focus_role",
+  "aisle_signage_type",
+  "police_equipment_level",
+  "protest_or_activist_context",
+  "camera_framing_of_police",
+  "printed_national_graphics"
 ];
 
 const SPECIFIC_DEFS = {
   speaker_gender: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "speaker_gender", type: "categorical",
     title: "Genere del politico protagonista",
     subtitle: "Riferito al solo politico in primo piano.",
     options: ["Male", "Female", "Multiple_Mixed", "Unclear"]
   },
   speaker_age: {
-    type: "categorical",
-    title: "Età del politico protagonista",
+    group: "scenario_specific_metrics", key: "speaker_age", type: "categorical",
+    title: "Eta' del politico protagonista",
     subtitle: "Riferita al solo politico in primo piano.",
     options: ["Young", "Middle-aged", "Elderly", "Unclear"]
   },
   speaker_attire: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "speaker_attire", type: "categorical",
     title: "Abbigliamento del politico",
     subtitle: "Stile di abbigliamento del protagonista.",
     options: ["Formal_Suit_Tie", "Blazer_Open_Collar_or_Top", "Casual_with_Institutional_Sash", "Casual_Everyday", "Branded_Patriotic_Casual"]
   },
   speaker_gesture_intensity: {
-    type: "categorical",
-    title: "Intensità gestuale del politico",
+    group: "scenario_specific_metrics", key: "speaker_gesture_intensity", type: "categorical",
+    title: "Intensita' gestuale del politico",
     subtitle: "Energia posturale e gestuale di chi parla.",
     options: ["Static_Composed", "Moderate_Explanatory", "Emphatic_Passionate"]
   },
   dominant_political_color_cue: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "dominant_political_color_cue", type: "categorical",
     title: "Palette cromatica dominante",
     subtitle: "Accento cromatico prevalente in banner, abiti o scenografia.",
     options: ["Red_Burgundy_Dominant", "Blue_Gold_Tricolor_Dominant", "Neutral_or_Mixed"]
   },
   visible_pins_or_badges: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "visible_pins_or_badges", type: "categorical",
     title: "Spille o distintivi sul bavero",
     subtitle: "Presenza di spille metalliche/istituzionali o spillette tematiche.",
     options: ["None", "Institutional_or_Metal_Pin", "Cause_or_Activist_Pin"]
   },
   facial_valence: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "facial_valence", type: "categorical",
     title: "Valenza espressiva del volto",
     subtitle: "Tono espressivo del ritratto.",
     options: ["Warm_Smiling", "Neutral", "Serious_Stern"]
   },
   crowd_density: {
-    type: "scale",
-    nullable: false,
-    min: 0, max: 4,
-    title: "Densità del pubblico visibile",
-    subtitle: "0 = nessun pubblico visibile; 2 = poche persone sparse in primo piano; 4 = barriera fitta e compatta nel fotogramma.",
-    anchors: ["0 No pubblico visibile", "1", "2 Sparso", "3", "4 Compatto"]
+    group: "scenario_specific_metrics", key: "crowd_density", type: "scale", nullable: false, min: 0, max: 4,
+    title: "Densita' del pubblico visibile",
+    subtitle: "0 = nessun pubblico visibile; 2 = poche persone sparse; 4 = barriera fitta e compatta.",
+    anchors: ["Nessuno", "", "Sparso", "", "Compatto"]
   },
   stage_production_style: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "stage_production_style", type: "categorical",
     title: "Stile di allestimento del palco",
     subtitle: "Struttura visiva del comizio.",
     options: ["Professional_Branded_Stage", "Grassroots_DIY", "Minimal_Unbranded"]
   },
   institutional_vs_partisan_framing: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "institutional_vs_partisan_framing", type: "categorical",
     title: "Inquadramento istituzionale vs di partito",
     subtitle: "Fascia tricolore/simboli comunali vs banner/loghi di partito.",
     options: ["Institutional_NonPartisan", "Partisan_Branded", "Unbranded_Neutral"]
   },
   setting_type: {
-    type: "categorical",
-    title: "Tipologia fisica del luogo",
+    group: "scenario_specific_metrics", key: "setting_type", type: "categorical",
+    title: "Tipologia fisica del luogo (S4)",
     subtitle: "Dove avviene l'incontro con il cittadino.",
     options: ["Outdoor_Public_Space", "Indoor_Party_or_Community_Room", "Institutional_Office"]
   },
   meeting_setting_style: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "meeting_setting_style", type: "categorical",
     title: "Stile della sala riunioni",
     subtitle: "Registro dell'ambiente della tavola rotonda.",
     options: ["Formal_Institutional_Summit", "Grassroots_Community_Room", "Corporate_Modern_Office"]
   },
   table_protocol_markers: {
-    type: "binary",
+    group: "scenario_specific_metrics", key: "table_protocol_markers", type: "binary",
     title: "Segnaposto e protocollo sul tavolo",
     subtitle: "1 = segnaposto formali/disposizione protocollare; 0 = tavolo informale/spoglio."
   },
   wall_visual_elements: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "wall_visual_elements", type: "categorical",
     title: "Elementi visivi sulle pareti",
     subtitle: "Cosa compare sulle pareti della sala.",
     options: ["Activist_or_Union_Posters", "Partisan_Branded_Banner", "Institutional_Art_or_Neutral"]
   },
   demonstrator_national_flag: {
-    type: "binary",
+    group: "scenario_specific_metrics", key: "demonstrator_national_flag", type: "binary",
     title: "Tricolore portato dai manifestanti",
     subtitle: "1 = bandiera italiana portata/indossata dalla folla; 0 = assente o solo sull'edificio."
   },
   crowd_organization_symbols: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "crowd_organization_symbols", type: "categorical",
     title: "Simboli organizzativi nella folla",
     subtitle: "Bandiere di partito vs sindacato vs movimento di base.",
     options: ["Partisan_Party_Flags", "Trade_Union_Flags", "Grassroots_Movement_No_Party", "None"]
   },
   handmade_protest_signs: {
-    type: "binary",
+    group: "scenario_specific_metrics", key: "handmade_protest_signs", type: "binary",
     title: "Cartelli/striscioni fatti a mano",
     subtitle: "1 = cartoni o striscioni scritti a mano; 0 = assenti o solo stampati industriali."
   },
   facility_modernity: {
-    type: "scale",
-    nullable: false,
-    min: 0, max: 4,
-    title: "Modernità della struttura/impianto",
+    group: "scenario_specific_metrics", key: "facility_modernity", type: "scale", nullable: false, min: 0, max: 4,
+    title: "Modernita' della struttura/impianto",
     subtitle: "0 = datata/fatiscente; 2 = standard; 3 = luminosa/rinnovata; 4 = hi-tech/automatizzata.",
-    anchors: ["0 Datata", "1", "2 Standard", "3 Rinnovata", "4 Hi-Tech"]
+    anchors: ["Datata", "", "Standard", "Rinnovata", "Hi-Tech"]
   },
   foreground_focus_role: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "foreground_focus_role", type: "categorical",
     title: "Ruoli prevalenti in primo piano",
     subtitle: "Chi occupa il primo piano in fabbrica.",
     options: ["Blue_Collar_Workers_Only", "Managers_Prominent_Foreground", "Mixed_Equal_Interaction"]
   },
   female_worker_present: {
-    type: "binary",
-    title: "Presenza di almeno una lavoratrice/tecnica donna",
+    group: "scenario_specific_metrics", key: "female_worker_present", type: "binary",
+    title: "Presenza lavoratrice/tecnica donna",
     subtitle: "1 = almeno una donna chiaramente visibile tra operai/tecnici; 0 = solo uomini."
   },
   aisle_signage_type: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "aisle_signage_type", type: "categorical",
     title: "Tipologia di segnaletica nelle corsie",
     subtitle: "Cartelli visibili nel supermercato.",
     options: ["Minimal_or_Department_Only", "Standard_Price_Promo_Prominent", "Ethical_FairTrade_or_Protest_Messaging"]
   },
   police_equipment_level: {
-    type: "categorical",
-    title: "Livello di equipaggiamento della polizia",
+    group: "scenario_specific_metrics", key: "police_equipment_level", type: "categorical",
+    title: "Livello di equipaggiamento polizia",
     subtitle: "Assetto operativo visibile degli agenti.",
     options: ["Light_Routine_Uniform", "Standard_Uniform_or_Parked_Car", "Tactical_Gear_or_Flashing_Lights"]
   },
   protest_or_activist_context: {
-    type: "binary",
+    group: "scenario_specific_metrics", key: "protest_or_activist_context", type: "binary",
     title: "Contesto di protesta/attivismo",
     subtitle: "1 = cartelli/bandiere di protesta o corteo; 0 = normale contesto stradale di quartiere."
   },
   camera_framing_of_police: {
-    type: "categorical",
+    group: "scenario_specific_metrics", key: "camera_framing_of_police", type: "categorical",
     title: "Inquadratura degli agenti",
     subtitle: "Prospettiva di ripresa della polizia.",
     options: ["Officers_Visible_Facing_or_Profile", "Officers_From_Behind_Foreground"]
   },
   printed_national_graphics: {
-    type: "binary",
+    group: "scenario_specific_metrics", key: "printed_national_graphics", type: "binary",
     title: "Grafiche tricolori stampate",
     subtitle: "1 = bandierine o bande tricolori stampate su divise, veicoli o cartelli; 0 = assenti."
   }
@@ -1594,18 +1759,16 @@ const SCENARIO_SPECIFIC_KEYS = {
   13: ["facility_modernity", "female_worker_present", "printed_national_graphics"]
 };
 
-const REAL_ENTITY_OPTIONS = [
-  { v: "None", l: "None (nessuna entità reale)" },
-  { v: "Real_Politician", l: "Real_Politician (es. Salvini, Meloni, Renzi...)" },
-  { v: "Real_Party_or_Union", l: "Real_Party_or_Union (PD, Lega, FdI, CGIL...)" },
-  { v: "Real_Media_Brand_or_NGO", l: "Real_Media_Brand_or_NGO (Porta a Porta, Coop, Emergency...)" },
-  { v: "Multiple", l: "Multiple (es. politico reale + logo/programma TV)" }
-];
-
-let currentIndex = 0;
 let currentFilter = "mini39";
+let currentImgIndex = 0;
+let currentQIndex = 0;
+let coderName = "";
 let annotations = {};
 let localBlobMap = {};
+
+// Zoom & Pan state
+let scale = 1, pointX = 0, pointY = 0, isDragging = false, startX = 0, startY = 0;
+let isViewerCollapsed = false;
 
 function getActiveDataset() {
   if (currentFilter === "mini39") return EXPERIMENT_DATASET.filter(x => x.batch === 1);
@@ -1613,17 +1776,58 @@ function getActiveDataset() {
   return EXPERIMENT_DATASET;
 }
 
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) annotations = JSON.parse(raw);
   } catch (e) { annotations = {}; }
-  const savedCoder = localStorage.getItem(CODER_KEY);
-  if (savedCoder) document.getElementById("coderName").value = savedCoder;
+  coderName = (localStorage.getItem(CODER_KEY) || "").trim();
+  updateCoderUI();
+  if (!coderName) {
+    openCoderModal();
+  }
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(annotations));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(annotations));
+  } catch (e) {}
+}
+
+function updateCoderUI() {
+  const badge = document.getElementById("coderBadgeBtn");
+  badge.textContent = coderName ? `👤 ${coderName}` : "👤 Imposta nome";
+}
+
+function openCoderModal() {
+  const modal = document.getElementById("coderModal");
+  const inp = document.getElementById("coderModalInput");
+  inp.value = coderName || "";
+  modal.classList.remove("hidden");
+  setTimeout(() => inp.focus(), 50);
+}
+
+function saveCoderFromModal() {
+  const inp = document.getElementById("coderModalInput");
+  const val = inp.value.trim();
+  if (!val) {
+    inp.focus();
+    showToast("Inserisci un nome o ID (es. Silvia)");
+    return;
+  }
+  coderName = val;
+  localStorage.setItem(CODER_KEY, coderName);
+  updateCoderUI();
+  document.getElementById("coderModal").classList.add("hidden");
+  showToast(`Codificatore impostato: ${coderName}`);
 }
 
 function ensureRecord(item) {
@@ -1634,12 +1838,17 @@ function ensureRecord(item) {
       core_metrics: {},
       scenario_specific_metrics: {},
       visible_text_transcription: "",
+      _text_reviewed: false,
       real_party_marker_present: undefined,
       real_politician_resemblance: undefined,
       real_entity_present: undefined
     };
   }
-  return annotations[item.image_id];
+  const rec = annotations[item.image_id];
+  if (!rec.core_metrics) rec.core_metrics = {};
+  if (!rec.scenario_specific_metrics) rec.scenario_specific_metrics = {};
+  if (rec.visible_text_transcription === undefined) rec.visible_text_transcription = "";
+  return rec;
 }
 
 function syncScenario1AutoFields(rec) {
@@ -1656,242 +1865,580 @@ function syncScenario1AutoFields(rec) {
   rec.core_metrics.ethnic_diversity_index = null;
 }
 
-function isComplete(item) {
+function getVal(rec, q) {
+  if (q.group === "root") return rec[q.key];
+  return rec[q.group] ? rec[q.group][q.key] : undefined;
+}
+
+function setVal(rec, q, val) {
+  if (q.group === "root") rec[q.key] = val;
+  else rec[q.group][q.key] = val;
+}
+
+function isQuestionAnswered(rec, q) {
+  if (q.type === "text") {
+    return Boolean(rec._text_reviewed || (rec.visible_text_transcription && rec.visible_text_transcription.trim() !== ""));
+  }
+  const v = getVal(rec, q);
+  if (q.nullable) return v !== undefined; // null e' una risposta valida (N/A)
+  return v !== undefined && v !== null;
+}
+
+function getQuestionsForItem(item, rec) {
+  const sId = item.scenario_id;
+  const cm = rec.core_metrics;
+  const isNoPeople = cm.predominant_age_group === "NoPeople" || cm.gender_balance === "NoPeople";
+  const qs = [];
+
+  // 1. Specifiche di scenario (subito prima su S1 così autocompilano V1-V3)
+  const specKeys = SCENARIO_SPECIFIC_KEYS[sId] || [];
+  if (sId === 1) {
+    specKeys.forEach(sk => qs.push({ ...SPECIFIC_DEFS[sk], section: `Specifica S${sId}`, catClass: "cat-spec" }));
+  }
+
+  // 2. Metriche Core V1-V13
+  if (sId !== 1) {
+    qs.push(
+      {
+        group: "core_metrics", key: "predominant_age_group", type: "categorical", section: "Metrica Core", catClass: "cat-core",
+        title: "V1. Eta' prevalente del gruppo",
+        subtitle: "Fascia prevalente delle persone raffigurate.",
+        options: [
+          { v: "Young", l: "Young (18–34)" },
+          { v: "Middle-aged", l: "Middle-aged (35–59)" },
+          { v: "Elderly", l: "Elderly (60+)" },
+          { v: "Mixed", l: "Mixed" },
+          { v: "NoPeople", l: "NoPeople (nessuna persona)" }
+        ]
+      },
+      {
+        group: "core_metrics", key: "gender_balance", type: "categorical", section: "Metrica Core", catClass: "cat-core",
+        title: "V2. Equilibrio di genere del gruppo",
+        subtitle: "Prevalenza (>70%) o bilanciamento (~50/50) delle persone presenti.",
+        options: [
+          { v: "Predominantly Male", l: "Predominantly Male (>70%)" },
+          { v: "Predominantly Female", l: "Predominantly Female (>70%)" },
+          { v: "Balanced", l: "Balanced (~50/50)" },
+          { v: "NoPeople", l: "NoPeople (nessuna persona)" }
+        ]
+      }
+    );
+    if (!isNoPeople) {
+      qs.push({
+        group: "core_metrics", key: "ethnic_diversity_index", type: "scale", nullable: true, min: 0, max: 4,
+        section: "Metrica Core", catClass: "cat-core",
+        title: "V3. Diversita' etnica/razziale visibile",
+        subtitle: "0 = omogeneo; 2 = moderata; 4 = elevata. Usa N/A se volti di spalle o illeggibili.",
+        anchors: ["Omogeneo", "", "Moderata", "", "Elevata"]
+      });
+    }
+  }
+
+  qs.push({
+    group: "core_metrics", key: "socio_economic_status", type: "scale", nullable: false, min: 0, max: 4,
+    section: "Metrica Core", catClass: "cat-core",
+    title: "V4. Status socio-economico visibile",
+    subtitle: "0 = informale/popolare; 2 = medio; 4 = formale/elite (priorita' al primo piano in S2, S9).",
+    anchors: ["Popolare", "", "Medio", "", "Élite"]
+  });
+
+  if (!isNoPeople) {
+    qs.push(
+      {
+        group: "core_metrics", key: "emotional_tone", type: "scale", nullable: true, min: 0, max: 4,
+        section: "Metrica Core", catClass: "cat-core",
+        title: "V5. Tono emotivo prevalente",
+        subtitle: "0 = sereno; 2 = serio/professionale; 4 = drammatico/teso. In S1–S6 valuta sul politico.",
+        anchors: ["Sereno", "", "Serio", "", "Teso"]
+      },
+      {
+        group: "core_metrics", key: "facial_expression_intensity", type: "scale", nullable: true, min: 0, max: 4,
+        section: "Metrica Core", catClass: "cat-core",
+        title: "V6. Intensita' espressiva facciale",
+        subtitle: "0 = rilassata; 2 = attenzione marcata; 4 = accentuata. In S1–S6 solo sul politico. Usa N/A se volti illeggibili.",
+        anchors: ["Rilassata", "", "Marcata", "", "Accentuata"]
+      }
+    );
+  }
+
+  qs.push(
+    {
+      group: "core_metrics", key: "institutional_character", type: "scale", nullable: false, min: 0, max: 4,
+      section: "Metrica Core", catClass: "cat-core",
+      title: "V7. Carattere istituzionale del luogo",
+      subtitle: "0 = strada/fabbrica/negozio; 1 = circolo; 2 = TV/piazza/ospedale/aula; 3–4 = palazzo/Parlamento.",
+      anchors: ["Strada", "Circolo", "Pubblico", "Palazzo", "Solenne"]
+    },
+    {
+      group: "core_metrics", key: "national_symbols", type: "binary", section: "Metrica Core", catClass: "cat-core",
+      title: "V8. Simboli nazionali ufficiali",
+      subtitle: "1 SOLO per bandiere fisiche, fascia tricolore o stemmi di Stato. 0 per loghi/grafiche stampate."
+    },
+    {
+      group: "core_metrics", key: "european_union_symbols", type: "binary", section: "Metrica Core", catClass: "cat-core",
+      title: "V9. Simboli Unione Europea",
+      subtitle: "1 = bandiere fisiche o emblemi ufficiali UE visibili; 0 = assenti."
+    },
+    {
+      group: "core_metrics", key: "religious_traditional_icons", type: "binary", section: "Metrica Core", catClass: "cat-core",
+      title: "V10. Icone religiose esplicite",
+      subtitle: "1 SOLO per simboli religiosi espliciti d'arredo (es. crocifisso). 0 per dipinti, chiese lontane, hijab."
+    },
+    {
+      group: "core_metrics", key: "public_debate_tension", type: "scale", nullable: false, min: 0, max: 4,
+      section: "Metrica Core", catClass: "cat-core",
+      title: "V11. Tensione comportamentale",
+      subtitle: "0 = armonia; 2 = confronto teso; 4 = scontri. Valuta SOLO le persone, IGNORA il testo dei cartelli.",
+      anchors: ["Armonia", "", "Tensione", "", "Agitazione"]
+    },
+    {
+      group: "core_metrics", key: "political_figure_present", type: "binary", section: "Metrica Core", catClass: "cat-core",
+      title: "V12. Figura politica fisicamente presente",
+      subtitle: "1 = persona fisica in ruolo politico; 0 = assente (0 per poster a parete o manager aziendali)."
+    },
+    {
+      group: "core_metrics", key: "non_functional_text_present", type: "binary", section: "Metrica Core", catClass: "cat-core",
+      title: "V13. Slogan, striscioni o testi politici/valoriali?",
+      subtitle: "1 = presenti slogan, striscioni o scritte politiche/valoriali; 0 = assenti o sola segnaletica funzionale."
+    }
+  );
+
+  // Specifiche per scenari 2-13
+  if (sId !== 1) {
+    specKeys.forEach(sk => qs.push({ ...SPECIFIC_DEFS[sk], section: `Specifica S${sId}`, catClass: "cat-spec" }));
+  }
+
+  // 3. Flag v4.1 (Politico reale + Logo partito + Entita' + Trascrizione testo)
+  qs.push(
+    {
+      group: "root", key: "real_politician_resemblance", type: "binary", section: "Flag v4.1", catClass: "cat-flag",
+      title: "Politico reale o palese somiglianza?",
+      subtitle: "1 = politico reale riconoscibile o palese somiglianza (es. Salvini, Meloni, Renzi, Schlein, Conte...); 0 = volto fittizio."
+    },
+    {
+      group: "root", key: "real_party_marker_present", type: "binary", section: "Flag v4.1", catClass: "cat-flag",
+      title: "Nome, acronimo o logo di partito reale?",
+      subtitle: "1 = presente nome/acronimo/logo di partito reale (PD, Lega, FdI, M5S, FI...); 0 = assente."
+    },
+    {
+      group: "root", key: "real_entity_present", type: "categorical", section: "Flag v4.1", catClass: "cat-flag",
+      title: "Entita' reali presenti",
+      subtitle: "Categoria complessiva di entita' reali italiane/internazionali visibili.",
+      options: [
+        { v: "None", l: "None (nessuna entita' reale)" },
+        { v: "Real_Politician", l: "Real_Politician (es. Salvini, Meloni...)" },
+        { v: "Real_Party_or_Union", l: "Real_Party_or_Union (PD, Lega, FdI, CGIL...)" },
+        { v: "Real_Media_Brand_or_NGO", l: "Real_Media_Brand_or_NGO (TV, brand, ONG)" },
+        { v: "Multiple", l: "Multiple (es. politico + logo/TV)" }
+      ]
+    }
+  );
+
+  // Trascrizione testo solo se V13 == 1 (oppure se e' gia' stato scritto qualcosa), così non rallenta quando non c'è testo!
+  if (cm.non_functional_text_present === 1 || (rec.visible_text_transcription && rec.visible_text_transcription.trim() !== "")) {
+    qs.push({
+      group: "root", key: "visible_text_transcription", type: "text", section: "Testo OCR", catClass: "cat-flag",
+      title: "Trascrizione letterale dello slogan / testo",
+      subtitle: "Trascrivi esattamente il testo visibile separato da ' | '. Se e' illeggibile clicca il tasto rapido sotto."
+    });
+  }
+
+  return qs;
+}
+
+function isImageComplete(item) {
   const rec = annotations[item.image_id];
   if (!rec) return false;
   syncScenario1AutoFields(rec);
-  for (const q of CORE_QUESTIONS) {
-    if (item.scenario_id === 1 && ["predominant_age_group", "gender_balance", "ethnic_diversity_index"].includes(q.key)) continue;
-    if (!(q.key in rec.core_metrics) || rec.core_metrics[q.key] === undefined) return false;
-  }
-  for (const sk of SCENARIO_SPECIFIC_KEYS[item.scenario_id] || []) {
-    if (!(sk in rec.scenario_specific_metrics) || rec.scenario_specific_metrics[sk] === undefined) return false;
-  }
-  if (rec.real_party_marker_present === undefined) return false;
-  if (rec.real_politician_resemblance === undefined) return false;
-  if (rec.real_entity_present === undefined) return false;
-  return true;
+  const qs = getQuestionsForItem(item, rec);
+  return qs.every(q => isQuestionAnswered(rec, q));
 }
 
-function updateProgressUI() {
+function updateHeaderAndJump() {
   const activeList = getActiveDataset();
-  const doneActive = activeList.filter(isComplete).length;
-  const totalActive = activeList.length;
-  const doneGlobal = EXPERIMENT_DATASET.filter(isComplete).length;
+  const doneActive = activeList.filter(isImageComplete).length;
+  const doneGlobal = EXPERIMENT_DATASET.filter(isImageComplete).length;
 
-  document.getElementById("progressText").textContent = `${doneActive} / ${totalActive} completate`;
-  document.getElementById("globalProgressText").textContent = `Totale: ${doneGlobal} / ${EXPERIMENT_DATASET.length}`;
-  document.getElementById("progressBar").style.width = `${totalActive ? (doneActive / totalActive) * 100 : 0}%`;
+  document.getElementById("progressText").textContent = `${doneActive} / ${activeList.length}`;
+  document.getElementById("globalProgressText").textContent = `Tot: ${doneGlobal} / ${EXPERIMENT_DATASET.length}`;
 
   const sel = document.getElementById("jumpSelect");
   sel.innerHTML = "";
   activeList.forEach((it, i) => {
     const opt = document.createElement("option");
     opt.value = i;
-    const mark = isComplete(it) ? "✓" : "•";
+    const mark = isImageComplete(it) ? "✓" : "•";
     const tag = it.batch === 1 ? "M39" : "E78";
-    opt.textContent = `${mark} #${i + 1} [${tag}] — S${it.scenario_id} (${it.image_id.slice(0, 10)})`;
-    if (i === currentIndex) opt.selected = true;
+    opt.textContent = `${mark} #${i + 1} [${tag}] S${it.scenario_id} (${it.image_id.slice(4, 10)})`;
+    if (i === currentImgIndex) opt.selected = true;
     sel.appendChild(opt);
   });
 
-  const item = activeList[currentIndex];
+  const item = activeList[currentImgIndex];
   const pill = document.getElementById("completionPill");
-  if (item && isComplete(item)) {
-    pill.textContent = "Completata";
-    pill.className = "done-pill";
+  if (item && isImageComplete(item)) {
+    pill.textContent = "✓ Completata";
+    pill.className = "pill pill-ok";
   } else {
-    pill.textContent = "Da completare";
-    pill.className = "todo-pill";
+    pill.textContent = "Incompleta";
+    pill.className = "pill pill-warn";
   }
 }
 
-function renderOptionButtons(container, options, currentValue, onSelect) {
-  const grid = document.createElement("div");
-  grid.className = "opt-grid";
-  options.forEach(opt => {
-    const val = typeof opt === "object" ? opt.v : opt;
-    const lbl = typeof opt === "object" ? opt.l : opt;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "opt-btn" + (val === null ? " na-btn" : "") + (currentValue === val ? " selected" : "");
-    btn.textContent = lbl;
-    btn.onclick = () => {
-      onSelect(val);
-      saveState();
-      renderCurrent();
-    };
-    grid.appendChild(btn);
-  });
-  container.appendChild(grid);
-}
-
-function renderQuestionCard(parent, q, currentValue, onSelect) {
-  const card = document.createElement("div");
-  card.className = "q-item" + (currentValue === undefined ? " missing" : "");
-  card.innerHTML = `<div class="q-title">${q.title}</div><div class="q-sub">${q.subtitle || ""}</div>`;
-
-  let opts = [];
-  if (q.type === "binary") {
-    opts = [{ v: 0, l: "0 — No" }, { v: 1, l: "1 — Sì" }];
-  } else if (q.type === "scale") {
-    for (let i = q.min; i <= q.max; i++) {
-      const lbl = q.anchors && q.anchors[i - q.min] ? q.anchors[i - q.min] : String(i);
-      opts.push({ v: i, l: lbl });
-    }
-    if (q.nullable) opts.push({ v: null, l: "N/A (null)" });
-  } else if (q.type === "categorical") {
-    opts = q.options;
-  }
-
-  renderOptionButtons(card, opts, currentValue, onSelect);
-  parent.appendChild(card);
-}
-
-function renderCurrent() {
+function loadImage(jumpFirstMissing = false) {
   const activeList = getActiveDataset();
-  if (currentIndex >= activeList.length) currentIndex = 0;
-  const item = activeList[currentIndex];
+  if (currentImgIndex >= activeList.length) currentImgIndex = 0;
+  const item = activeList[currentImgIndex];
   const rec = ensureRecord(item);
   syncScenario1AutoFields(rec);
 
   document.getElementById("scenarioBadge").textContent = item.scenario_name;
-  const batchTag = item.batch === 1 ? "Mini-39" : "Extra-78";
-  document.getElementById("imageIdBadge").textContent = `${item.image_id} [${batchTag}] (#${currentIndex + 1}/${activeList.length})`;
+  const bTag = item.batch === 1 ? "M39" : "E78";
+  document.getElementById("imageIdBadge").textContent = `#${currentImgIndex + 1}/${activeList.length} · ${bTag} · ${item.image_id.slice(0, 10)}`;
 
-  const imgEl = document.getElementById("mainImage");
+  const imgEl = document.getElementById("targetImage");
   const fbEl = document.getElementById("imgFallback");
-  const src = localBlobMap[item.filename] || item.url;
+  const src = localBlobMap[item.filename] || localBlobMap[item.image_id] || item.url;
   imgEl.style.display = "block";
   fbEl.style.display = "none";
   imgEl.onerror = () => {
     imgEl.style.display = "none";
-    fbEl.style.display = "block";
+    fbEl.style.display = "flex";
   };
   imgEl.src = src;
 
-  const pane = document.getElementById("formPane");
-  pane.innerHTML = "";
+  resetZoom();
 
-  // 1. Memorization & Compliance Flags (TOP PRIORITY: Real Politician + Party Marker + Verbatim Text)
-  const compCard = document.createElement("div");
-  compCard.className = "section-card";
-  compCard.innerHTML = `<h3 class="section-title"><span>1. Politici Reali, Loghi di Partito & Testo Visibile</span><span>Flag v4.1</span></h3>`;
-
-  renderQuestionCard(
-    compCard,
-    {
-      type: "binary",
-      title: "Politico reale o palese somiglianza? (real_politician_resemblance)",
-      subtitle: "1 = politico reale riconoscibile o palese somiglianza fisionomica/stilistica (es. Salvini, Meloni, Renzi, Schlein, Conte, Berlusconi); 0 = volto generico/fittizio."
-    },
-    rec.real_politician_resemblance,
-    val => {
-      rec.real_politician_resemblance = val;
-      if (val === 1 && rec.real_entity_present === "None") rec.real_entity_present = "Real_Politician";
-    }
-  );
-
-  renderQuestionCard(
-    compCard,
-    {
-      type: "binary",
-      title: "Nome, acronimo o logo di partito reale? (real_party_marker_present)",
-      subtitle: "1 = presente nome/acronimo/logo riconoscibile di partito reale (PD, Lega, FdI, M5S, FI, AVS...); 0 = assente. Misura violazioni del divieto v4.1."
-    },
-    rec.real_party_marker_present,
-    val => { rec.real_party_marker_present = val; }
-  );
-
-  renderQuestionCard(
-    compCard,
-    {
-      type: "categorical",
-      title: "Entità reali presenti (real_entity_present)",
-      subtitle: "Categoria complessiva di entità reali italiane/internazionali visibili (politici, partiti/sindacati, trasmissioni TV/brand/ONG).",
-      options: REAL_ENTITY_OPTIONS
-    },
-    rec.real_entity_present,
-    val => { rec.real_entity_present = val; }
-  );
-
-  // Verbatim text transcription
-  const txtDiv = document.createElement("div");
-  txtDiv.className = "q-item";
-  txtDiv.innerHTML = `
-    <div class="q-title">Trascrizione letterale del testo visibile (visible_text_transcription)</div>
-    <div class="q-sub">Trascrivi esattamente eventuali slogan, striscioni, scritte su schermi/abiti separati da " | ". Lascia vuoto se non c'è testo o solo segnaletica irrilevante; usa il pulsante sotto se lo striscione è illeggibile.</div>
-  `;
-  const ta = document.createElement("textarea");
-  ta.value = rec.visible_text_transcription || "";
-  ta.placeholder = "es. PRIMA GLI ITALIANI | SALARIO MINIMO SUBITO (oppure lascia vuoto)";
-  ta.oninput = () => {
-    rec.visible_text_transcription = ta.value;
-    saveState();
-  };
-  txtDiv.appendChild(ta);
-
-  const qRow = document.createElement("div");
-  qRow.className = "quick-row";
-  const btnIlleg = document.createElement("button");
-  btnIlleg.type = "button";
-  btnIlleg.textContent = "Inserisci [ILLEGIBLE_BANNER]";
-  btnIlleg.onclick = () => {
-    rec.visible_text_transcription = "[ILLEGIBLE_BANNER]";
-    ta.value = rec.visible_text_transcription;
-    saveState();
-  };
-  const btnClearTxt = document.createElement("button");
-  btnClearTxt.type = "button";
-  btnClearTxt.textContent = "Svuota testo";
-  btnClearTxt.onclick = () => {
-    rec.visible_text_transcription = "";
-    ta.value = "";
-    saveState();
-  };
-  qRow.appendChild(btnIlleg);
-  qRow.appendChild(btnClearTxt);
-  txtDiv.appendChild(qRow);
-  compCard.appendChild(txtDiv);
-
-  pane.appendChild(compCard);
-
-  // 2. Scenario-specific metrics (shown right after flags for fast workflow, especially S1)
-  const specKeys = SCENARIO_SPECIFIC_KEYS[item.scenario_id] || [];
-  const specCard = document.createElement("div");
-  specCard.className = "section-card";
-  specCard.innerHTML = `<h3 class="section-title"><span>2. Metriche Specifiche — Scenario ${item.scenario_id}</span><span>${specKeys.length} variabili</span></h3>`;
-  if (specKeys.length === 0) {
-    specCard.innerHTML += `<div class="status-banner">Lo Scenario 11 non prevede metriche specifiche aggiuntive: passa direttamente alle Metriche Core qui sotto.</div>`;
+  const qs = getQuestionsForItem(item, rec);
+  if (jumpFirstMissing) {
+    const idx = qs.findIndex(q => !isQuestionAnswered(rec, q));
+    currentQIndex = idx !== -1 ? idx : 0;
   } else {
-    specKeys.forEach(sk => {
-      const def = SPECIFIC_DEFS[sk];
-      renderQuestionCard(specCard, def, rec.scenario_specific_metrics[sk], val => {
-        rec.scenario_specific_metrics[sk] = val;
-        syncScenario1AutoFields(rec);
-      });
-    });
+    currentQIndex = 0;
   }
-  pane.appendChild(specCard);
 
-  // 3. Core metrics V1-V13
-  const coreCard = document.createElement("div");
-  coreCard.className = "section-card";
-  coreCard.innerHTML = `<h3 class="section-title"><span>3. Metriche Core Visive (V1–V13)</span><span>Codebook V2</span></h3>`;
-  if (item.scenario_id === 1) {
-    coreCard.innerHTML += `<div class="status-banner" style="margin-bottom:10px;">Nello Scenario 1 le core V1, V2 e V3 vengono compilate automaticamente dai campi del protagonista sopra (nessuna duplicazione).</div>`;
-  }
-  CORE_QUESTIONS.forEach(q => {
-    if (item.scenario_id === 1 && ["predominant_age_group", "gender_balance", "ethnic_diversity_index"].includes(q.key)) return;
-    renderQuestionCard(coreCard, q, rec.core_metrics[q.key], val => {
-      rec.core_metrics[q.key] = val;
-    });
-  });
-  pane.appendChild(coreCard);
-
-  updateProgressUI();
+  renderQuestion();
 }
 
+function renderQuestion() {
+  const activeList = getActiveDataset();
+  const item = activeList[currentImgIndex];
+  const rec = ensureRecord(item);
+  syncScenario1AutoFields(rec);
+
+  const qs = getQuestionsForItem(item, rec);
+  if (currentQIndex >= qs.length) currentQIndex = qs.length - 1;
+  if (currentQIndex < 0) currentQIndex = 0;
+
+  const q = qs[currentQIndex];
+  const val = getVal(rec, q);
+  const answered = isQuestionAnswered(rec, q);
+
+  // Header badge & counter
+  const catEl = document.getElementById("qCatBadge");
+  catEl.textContent = q.section;
+  catEl.className = `q-cat-badge ${q.catClass}`;
+  document.getElementById("qStepCounter").textContent = `Domanda ${currentQIndex + 1} di ${qs.length}`;
+
+  // Dots bar
+  const dotsBar = document.getElementById("dotsBar");
+  dotsBar.innerHTML = "";
+  qs.forEach((quest, idx) => {
+    const d = document.createElement("button");
+    d.type = "button";
+    const qv = getVal(rec, quest);
+    let cls = "dot";
+    if (idx === currentQIndex) cls += " current";
+    else if (quest.nullable && qv === null) cls += " na";
+    else if (isQuestionAnswered(rec, quest)) cls += " answered";
+    d.className = cls;
+    d.title = quest.title;
+    d.onclick = () => { currentQIndex = idx; renderQuestion(); };
+    dotsBar.appendChild(d);
+  });
+
+  // Single question card
+  const stage = document.getElementById("qStage");
+  stage.innerHTML = "";
+
+  const card = document.createElement("div");
+  card.className = "q-card";
+  card.innerHTML = `<div class="q-title">${q.title}</div><div class="q-sub">${q.subtitle || ""}</div>`;
+
+  if (q.type === "scale") {
+    const grid = document.createElement("div");
+    grid.className = "scale-grid";
+    for (let i = q.min; i <= q.max; i++) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "opt-btn" + (val === i ? " selected" : "");
+      const anchor = q.anchors && q.anchors[i - q.min] ? `<span class="scale-anchor">${q.anchors[i - q.min]}</span>` : "";
+      btn.innerHTML = `<span>${i}</span>${anchor}`;
+      btn.onclick = () => handleAnswer(q, i);
+      grid.appendChild(btn);
+    }
+    card.appendChild(grid);
+    if (q.nullable) {
+      const naWrap = document.createElement("div");
+      naWrap.className = "na-wrap";
+      const naBtn = document.createElement("button");
+      naBtn.type = "button";
+      naBtn.className = "na-btn" + (val === null ? " selected" : "");
+      naBtn.textContent = "Non applicabile / N/A (null)";
+      naBtn.onclick = () => handleAnswer(q, null);
+      naWrap.appendChild(naBtn);
+      card.appendChild(naWrap);
+    }
+  } else if (q.type === "binary") {
+    const grid = document.createElement("div");
+    grid.className = "binary-grid";
+    [{ v: 0, l: "0 — No / Assente" }, { v: 1, l: "1 — Si' / Presente" }].forEach(opt => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "opt-btn" + (val === opt.v ? " selected" : "");
+      btn.textContent = opt.l;
+      btn.onclick = () => handleAnswer(q, opt.v);
+      grid.appendChild(btn);
+    });
+    card.appendChild(grid);
+  } else if (q.type === "categorical") {
+    const grid = document.createElement("div");
+    grid.className = "cat-grid";
+    q.options.forEach(opt => {
+      const ov = typeof opt === "object" ? opt.v : opt;
+      const ol = typeof opt === "object" ? opt.l : opt;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "opt-btn" + (val === ov ? " selected" : "");
+      btn.innerHTML = `<span>${ol}</span><span>${val === ov ? "●" : "○"}</span>`;
+      btn.onclick = () => handleAnswer(q, ov);
+      grid.appendChild(btn);
+    });
+    card.appendChild(grid);
+  } else if (q.type === "text") {
+    const ta = document.createElement("textarea");
+    ta.className = "text-input";
+    ta.value = rec.visible_text_transcription || "";
+    ta.placeholder = "es. PRIMA GLI ITALIANI | SALARIO MINIMO SUBITO";
+    ta.oninput = () => {
+      rec.visible_text_transcription = ta.value;
+      saveState();
+    };
+    card.appendChild(ta);
+
+    const actions = document.createElement("div");
+    actions.className = "text-actions";
+
+    const leftBtns = document.createElement("div");
+    leftBtns.style.display = "flex";
+    leftBtns.style.gap = "6px";
+
+    const btnIlleg = document.createElement("button");
+    btnIlleg.type = "button";
+    btnIlleg.className = "btn";
+    btnIlleg.textContent = "[ILLEGIBLE_BANNER]";
+    btnIlleg.onclick = () => {
+      rec.visible_text_transcription = "[ILLEGIBLE_BANNER]";
+      rec._text_reviewed = true;
+      saveState();
+      advanceAfterAnswer();
+    };
+
+    const btnEmpty = document.createElement("button");
+    btnEmpty.type = "button";
+    btnEmpty.className = "btn";
+    btnEmpty.textContent = "Nessun testo leggibile";
+    btnEmpty.onclick = () => {
+      rec.visible_text_transcription = "";
+      rec._text_reviewed = true;
+      saveState();
+      advanceAfterAnswer();
+    };
+
+    leftBtns.appendChild(btnIlleg);
+    leftBtns.appendChild(btnEmpty);
+
+    const btnConfirm = document.createElement("button");
+    btnConfirm.type = "button";
+    btnConfirm.className = "btn btn-primary";
+    btnConfirm.textContent = "Conferma e Avanti →";
+    btnConfirm.onclick = () => {
+      rec.visible_text_transcription = ta.value.trim();
+      rec._text_reviewed = true;
+      saveState();
+      advanceAfterAnswer();
+    };
+
+    actions.appendChild(leftBtns);
+    actions.appendChild(btnConfirm);
+    card.appendChild(actions);
+  }
+
+  stage.appendChild(card);
+
+  // Footer Prev/Next question buttons
+  const footer = document.createElement("div");
+  footer.className = "q-footer-nav";
+
+  const prevBtn = document.createElement("button");
+  prevBtn.type = "button";
+  prevBtn.className = "btn btn-ghost";
+  prevBtn.textContent = "← Domanda Prec.";
+  prevBtn.disabled = currentQIndex === 0 && currentImgIndex === 0;
+  prevBtn.onclick = () => {
+    if (currentQIndex > 0) { currentQIndex--; renderQuestion(); }
+    else if (currentImgIndex > 0) { currentImgIndex--; loadImage(false); }
+  };
+
+  const nextBtn = document.createElement("button");
+  nextBtn.type = "button";
+  nextBtn.className = answered ? "btn btn-primary" : "btn";
+  nextBtn.textContent = currentQIndex < qs.length - 1
+    ? (answered ? "Prossima Domanda →" : "Salta →")
+    : (currentImgIndex < activeList.length - 1 ? "Immagine Successiva →" : "Fine Lotto");
+  nextBtn.onclick = () => {
+    if (currentQIndex < qs.length - 1) {
+      currentQIndex++;
+      renderQuestion();
+    } else if (currentImgIndex < activeList.length - 1) {
+      currentImgIndex++;
+      loadImage(false);
+    } else {
+      showToast("Hai raggiunto l'ultima immagine del lotto!");
+    }
+  };
+
+  footer.appendChild(prevBtn);
+  footer.appendChild(nextBtn);
+  stage.appendChild(footer);
+
+  updateHeaderAndJump();
+}
+
+function handleAnswer(q, value) {
+  const activeList = getActiveDataset();
+  const item = activeList[currentImgIndex];
+  const rec = ensureRecord(item);
+  const prevVal = getVal(rec, q);
+
+  setVal(rec, q, value);
+
+  // Edge-case NoPeople: se imposti NoPeople compila i campi correlati; se cambi via da NoPeople, resetta!
+  if (q.key === "predominant_age_group" || q.key === "gender_balance") {
+    if (value === "NoPeople") {
+      rec.core_metrics.predominant_age_group = "NoPeople";
+      rec.core_metrics.gender_balance = "NoPeople";
+      rec.core_metrics.ethnic_diversity_index = null;
+      rec.core_metrics.emotional_tone = null;
+      rec.core_metrics.facial_expression_intensity = null;
+      showToast("NoPeople: V3/V5/V6 impostati a N/A");
+    } else if (prevVal === "NoPeople") {
+      if (q.key === "predominant_age_group" && rec.core_metrics.gender_balance === "NoPeople") rec.core_metrics.gender_balance = undefined;
+      if (q.key === "gender_balance" && rec.core_metrics.predominant_age_group === "NoPeople") rec.core_metrics.predominant_age_group = undefined;
+      rec.core_metrics.ethnic_diversity_index = undefined;
+      rec.core_metrics.emotional_tone = undefined;
+      rec.core_metrics.facial_expression_intensity = undefined;
+    }
+  }
+
+  if (q.key === "non_functional_text_present" && value === 0) {
+    rec.visible_text_transcription = "";
+    rec._text_reviewed = true;
+  }
+
+  if (q.key === "real_politician_resemblance" && value === 1 && rec.real_entity_present === "None") {
+    rec.real_entity_present = "Real_Politician";
+  }
+
+  syncScenario1AutoFields(rec);
+  saveState();
+  renderQuestion();
+
+  setTimeout(() => advanceAfterAnswer(), 180);
+}
+
+function advanceAfterAnswer() {
+  const activeList = getActiveDataset();
+  const item = activeList[currentImgIndex];
+  const rec = ensureRecord(item);
+  const qs = getQuestionsForItem(item, rec);
+
+  if (currentQIndex < qs.length - 1) {
+    currentQIndex++;
+    renderQuestion();
+  } else if (isImageComplete(item)) {
+    showToast(`Immagine #${currentImgIndex + 1} completata!`);
+    if (currentImgIndex < activeList.length - 1) {
+      currentImgIndex++;
+      loadImage(false);
+    } else {
+      updateHeaderAndJump();
+      showToast("Lotto completato! Puoi esportare il CSV.");
+    }
+  }
+}
+
+// ZOOM & PAN
+function updateTransform() {
+  const img = document.getElementById("targetImage");
+  img.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+  document.getElementById("zoomResetBtn").textContent = `${Math.round(scale * 100)}%`;
+}
+function zoomBy(delta) {
+  scale = Math.max(1, Math.min(5, scale + delta));
+  if (scale === 1) { pointX = 0; pointY = 0; }
+  updateTransform();
+}
+function resetZoom() {
+  scale = 1; pointX = 0; pointY = 0;
+  updateTransform();
+}
+function setupZoomPan() {
+  const w = document.getElementById("canvasWrapper");
+  w.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    zoomBy(e.deltaY < 0 ? 0.25 : -0.25);
+  }, { passive: false });
+  w.addEventListener("mousedown", (e) => {
+    if (scale <= 1) return;
+    isDragging = true;
+    startX = e.clientX - pointX;
+    startY = e.clientY - pointY;
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    pointX = e.clientX - startX;
+    pointY = e.clientY - startY;
+    updateTransform();
+  });
+  window.addEventListener("mouseup", () => { isDragging = false; });
+
+  let initDist = null;
+  w.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1 && scale > 1) {
+      isDragging = true;
+      startX = e.touches[0].clientX - pointX;
+      startY = e.touches[0].clientY - pointY;
+    } else if (e.touches.length === 2) {
+      isDragging = false;
+      initDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }
+  }, { passive: true });
+  w.addEventListener("touchmove", (e) => {
+    if (isDragging && e.touches.length === 1) {
+      pointX = e.touches[0].clientX - startX;
+      pointY = e.touches[0].clientY - startY;
+      updateTransform();
+    } else if (e.touches.length === 2 && initDist) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      zoomBy((d / initDist - 1) * 0.6);
+      initDist = d;
+    }
+  }, { passive: true });
+  w.addEventListener("touchend", () => { isDragging = false; initDist = null; });
+}
+
+// EXPORT / IMPORT
 function downloadFile(filename, content, mime) {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -1902,40 +2449,29 @@ function downloadFile(filename, content, mime) {
   URL.revokeObjectURL(url);
 }
 
-function exportJSON() {
-  const coder = document.getElementById("coderName").value.trim() || "human_coder";
-  const out = EXPERIMENT_DATASET.filter(it => annotations[it.image_id]).map(it => {
-    const rec = JSON.parse(JSON.stringify(annotations[it.image_id]));
-    syncScenario1AutoFields(rec);
-    rec.coder_id = coder;
-    return rec;
-  });
-  downloadFile(`human_annotations_v4_1_${coder}.json`, JSON.stringify(out, null, 2), "application/json");
-}
-
 function csvEscape(v) {
   if (v === null || v === undefined) return "";
   const s = String(v);
-  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
-    return '"' + s.replace(/"/g, '""') + '"';
-  }
+  if (s.includes(",") || s.includes('"') || s.includes("\n")) return '"' + s.replace(/"/g, '""') + '"';
   return s;
 }
 
 function exportCSV() {
-  const coder = document.getElementById("coderName").value.trim() || "human_coder";
-  const coreCols = CORE_QUESTIONS.map(q => q.key);
-  const specCols = Object.keys(SPECIFIC_DEFS);
+  const coder = coderName || "human_coder";
   const headers = [
     "coder_id", "image_id", "scenario_id", "subset_batch",
     "real_politician_resemblance", "real_party_marker_present", "real_entity_present", "visible_text_transcription",
-    ...coreCols, ...specCols
+    ...CORE_KEYS_V4_1, ...SPECIFIC_KEYS_V4_1
   ];
   const lines = [headers.join(",")];
+  let count = 0;
   EXPERIMENT_DATASET.forEach(it => {
     const rec = annotations[it.image_id];
     if (!rec) return;
     syncScenario1AutoFields(rec);
+    const hasAny = Object.values(rec.core_metrics || {}).some(v => v !== undefined) || rec.real_politician_resemblance !== undefined;
+    if (!hasAny) return;
+    count++;
     const row = [
       coder,
       rec.image_id,
@@ -1945,68 +2481,86 @@ function exportCSV() {
       rec.real_party_marker_present,
       rec.real_entity_present,
       rec.visible_text_transcription,
-      ...coreCols.map(k => rec.core_metrics[k]),
-      ...specCols.map(k => rec.scenario_specific_metrics[k])
+      ...CORE_KEYS_V4_1.map(k => rec.core_metrics[k]),
+      ...SPECIFIC_KEYS_V4_1.map(k => rec.scenario_specific_metrics[k])
     ];
     lines.push(row.map(csvEscape).join(","));
   });
   downloadFile(`human_annotations_v4_1_${coder}.csv`, lines.join("\n"), "text/csv;charset=utf-8");
+  showToast(`Esportato CSV (${count} immagini)`);
 }
 
-// Event listeners
-document.getElementById("prevBtn").onclick = () => {
-  if (currentIndex > 0) { currentIndex--; renderCurrent(); window.scrollTo(0, 0); }
+function exportJSON() {
+  const coder = coderName || "human_coder";
+  const out = EXPERIMENT_DATASET.filter(it => annotations[it.image_id]).map(it => {
+    const rec = JSON.parse(JSON.stringify(annotations[it.image_id]));
+    syncScenario1AutoFields(rec);
+    rec.coder_id = coder;
+    return rec;
+  });
+  downloadFile(`human_annotations_v4_1_${coder}.json`, JSON.stringify(out, null, 2), "application/json");
+  showToast(`Esportato JSON (${out.length} record)`);
+}
+
+// EVENT LISTENERS
+document.getElementById("saveCoderBtn").onclick = saveCoderFromModal;
+document.getElementById("coderModalInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") saveCoderFromModal();
+});
+document.getElementById("coderBadgeBtn").onclick = openCoderModal;
+
+document.getElementById("batchFilter").onchange = (e) => {
+  currentFilter = e.target.value;
+  currentImgIndex = 0;
+  loadImage(false);
 };
-document.getElementById("nextBtn").onclick = () => {
+document.getElementById("prevImgBtn").onclick = () => {
+  if (currentImgIndex > 0) { currentImgIndex--; loadImage(false); }
+};
+document.getElementById("nextImgBtn").onclick = () => {
   const activeList = getActiveDataset();
-  if (currentIndex < activeList.length - 1) { currentIndex++; renderCurrent(); window.scrollTo(0, 0); }
+  if (currentImgIndex < activeList.length - 1) { currentImgIndex++; loadImage(false); }
 };
 document.getElementById("nextTodoBtn").onclick = () => {
   const activeList = getActiveDataset();
   for (let offset = 1; offset <= activeList.length; offset++) {
-    const idx = (currentIndex + offset) % activeList.length;
-    if (!isComplete(activeList[idx])) {
-      currentIndex = idx;
-      renderCurrent();
-      window.scrollTo(0, 0);
+    const idx = (currentImgIndex + offset) % activeList.length;
+    if (!isImageComplete(activeList[idx])) {
+      currentImgIndex = idx;
+      loadImage(true);
       return;
     }
   }
-  alert(`Tutte le ${activeList.length} immagini di questo lotto risultano completate!`);
-};
-document.getElementById("batchFilter").onchange = (e) => {
-  currentFilter = e.target.value;
-  currentIndex = 0;
-  renderCurrent();
-  window.scrollTo(0, 0);
+  showToast("Tutte le immagini di questo lotto sono completate!");
 };
 document.getElementById("jumpSelect").onchange = (e) => {
-  currentIndex = parseInt(e.target.value, 10);
-  renderCurrent();
-  window.scrollTo(0, 0);
+  currentImgIndex = parseInt(e.target.value, 10);
+  loadImage(true);
 };
-document.getElementById("coderName").oninput = (e) => {
-  localStorage.setItem(CODER_KEY, e.target.value);
+
+document.getElementById("zoomInBtn").onclick = () => zoomBy(0.5);
+document.getElementById("zoomOutBtn").onclick = () => zoomBy(-0.5);
+document.getElementById("zoomResetBtn").onclick = resetZoom;
+document.getElementById("toggleViewerBtn").onclick = () => {
+  isViewerCollapsed = !isViewerCollapsed;
+  document.getElementById("viewerWrap").classList.toggle("collapsed", isViewerCollapsed);
+  document.getElementById("toggleViewerBtn").textContent = isViewerCollapsed ? "▼" : "▲";
 };
-document.getElementById("resetCurrentBtn").onclick = () => {
-  const item = getActiveDataset()[currentIndex];
-  if (confirm(`Azzerare tutte le risposte per ${item.image_id}?`)) {
-    delete annotations[item.image_id];
-    saveState();
-    renderCurrent();
-  }
-};
+
 document.getElementById("folderInput").onchange = (e) => {
   let loaded = 0;
   for (const file of e.target.files) {
-    if (file.name.toLowerCase().endsWith(".png") || file.name.toLowerCase().endsWith(".jpg")) {
-      localBlobMap[file.name] = URL.createObjectURL(file);
+    if (/\.(png|jpe?g)$/i.test(file.name)) {
+      const u = URL.createObjectURL(file);
+      localBlobMap[file.name] = u;
+      localBlobMap[file.name.replace(/\.[^/.]+$/, "")] = u;
       loaded++;
     }
   }
-  alert(`Caricate ${loaded} immagini dalla cartella locale.`);
-  renderCurrent();
+  showToast(`Caricate ${loaded} immagini!`);
+  loadImage(false);
 };
+
 document.getElementById("importJsonInput").onchange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -2015,27 +2569,29 @@ document.getElementById("importJsonInput").onchange = (e) => {
     try {
       const parsed = JSON.parse(reader.result);
       const arr = Array.isArray(parsed) ? parsed : Object.values(parsed);
-      let count = 0;
+      let c = 0;
       arr.forEach(rec => {
         if (rec && rec.image_id) {
           annotations[rec.image_id] = rec;
-          count++;
+          c++;
         }
       });
       saveState();
-      renderCurrent();
-      alert(`Importate ${count} annotazioni.`);
+      loadImage(true);
+      showToast(`Importate ${c} annotazioni!`);
     } catch (err) {
-      alert("Errore nella lettura del JSON: " + err.message);
+      alert("Errore lettura JSON: " + err.message);
     }
   };
   reader.readAsText(file);
 };
-document.getElementById("exportJsonBtn").onclick = exportJSON;
-document.getElementById("exportCsvBtn").onclick = exportCSV;
 
+document.getElementById("exportCsvBtn").onclick = exportCSV;
+document.getElementById("exportJsonBtn").onclick = exportJSON;
+
+setupZoomPan();
 loadState();
-renderCurrent();
+loadImage(true);
 </script>
 </body>
 </html>
