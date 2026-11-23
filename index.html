@@ -1,2607 +1,2041 @@
 <!DOCTYPE html>
-<html lang="it" class="h-full">
+<html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Annotator Pro - Pilot Studio Bias Ideologico</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- FontAwesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Canvas Confetti for gamification celebrations -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-        }
-      }
-    }
-  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blind Visual Annotator v4.1 — Codebook V2 (117 immagini)</title>
   <style>
-    * { -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Inter', sans-serif; overscroll-behavior-y: none; }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    @keyframes pulse-glow {
-      0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
-      50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.8); }
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --card: #273449;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dark: #0284c7;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
     }
-    .gamified-glow { animation: pulse-glow 3s infinite; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(15, 23, 42, 0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .badge {
+      background: #0ea5e922;
+      color: var(--accent);
+      border: 1px solid #0ea5e955;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    button, .file-btn {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button:hover, .file-btn:hover {
+      border-color: var(--accent);
+      background: #334155;
+    }
+    button.primary {
+      background: var(--accent-dark);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    button.primary:hover {
+      background: #0369a1;
+    }
+    button.success {
+      background: #15803d;
+      border-color: var(--ok);
+      color: #fff;
+    }
+    button.danger {
+      background: #7f1d1d;
+      border-color: var(--danger);
+      color: #fecaca;
+    }
+    .progress-wrap {
+      width: 100%;
+      height: 4px;
+      background: var(--panel);
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--ok));
+      width: 0%;
+      transition: width 0.25s ease;
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(340px, 46%) 1fr;
+      gap: 18px;
+      padding: 18px;
+      max-width: 1560px;
+      margin: 0 auto;
+    }
+    @media (max-width: 980px) {
+      main { grid-template-columns: 1fr; }
+      .image-pane { position: static !important; }
+    }
+    .image-pane {
+      position: sticky;
+      top: 72px;
+      align-self: start;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .img-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .scenario-pill {
+      background: #38bdf822;
+      color: #7dd3fc;
+      border: 1px solid #38bdf844;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .img-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .img-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #020617;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+    }
+    .img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .img-fallback {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      gap: 8px;
+    }
+    .coder-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .coder-row input, .coder-row select {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+    .form-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .section-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .section-title {
+      margin: 0 0 12px 0;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .q-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .q-item.missing {
+      border-color: var(--warn);
+      box-shadow: 0 0 0 1px #f59e0b55;
+    }
+    .q-title {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+    .q-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .opt-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .opt-btn {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 11px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .opt-btn:hover {
+      border-color: var(--accent);
+    }
+    .opt-btn.selected {
+      background: var(--accent-dark);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+    .opt-btn.na-btn.selected {
+      background: #475569;
+      border-color: #94a3b8;
+    }
+    textarea {
+      width: 100%;
+      min-height: 68px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+    }
+    .quick-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .status-banner {
+      font-size: 12.5px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #0ea5e918;
+      border: 1px solid #0ea5e944;
+      color: #bae6fd;
+    }
+    .done-pill {
+      background: #16a34a33;
+      color: #86efac;
+      border: 1px solid #22c55e66;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .todo-pill {
+      background: #f59e0b22;
+      color: #fcd34d;
+      border: 1px solid #f59e0b55;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 h-full flex flex-col overflow-hidden select-none">
-
-  <!-- Toast Notification -->
-  <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 -translate-y-20 opacity-0 transition-all duration-300 z-50 bg-slate-800 border border-slate-700 text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center space-x-3 text-sm pointer-events-none">
-    <i id="toast-icon" class="text-emerald-400 fa-solid fa-circle-check"></i>
-    <span id="toast-message">Notifica</span>
-  </div>
-
-  <!-- APP CONTAINER -->
-  <div id="app" class="flex flex-col h-full w-full max-w-lg mx-auto relative bg-slate-950 shadow-2xl overflow-hidden">
-    
-    <!-- HEADER WITH GAMIFICATION XP & LEVEL -->
-    <header class="flex flex-col px-4 py-2 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 z-20 shrink-0 space-y-1.5">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-            <i id="user-rank-icon" class="fa-solid fa-seedling text-xs"></i>
-          </div>
-          <div>
-            <div class="flex items-center space-x-1.5">
-              <h1 id="user-rank-title" class="font-bold text-xs text-white leading-none">Novizio Annotatore</h1>
-              <span class="bg-indigo-500/20 text-indigo-300 text-[9px] font-bold px-1.5 py-0.5 rounded-md border border-indigo-500/30" id="user-level-badge">Lvl 1</span>
-            </div>
-            <span id="header-progress" class="text-[10px] text-slate-400 font-medium">Immagine 1 di 195</span>
-          </div>
-        </div>
-
-        <!-- Controls: Local Folder Picker, Streak, Codebook -->
-        <div class="flex items-center space-x-1.5">
-          <!-- Folder selector button -->
-          <label class="cursor-pointer h-7 px-2 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-300 hover:text-white flex items-center space-x-1 text-[11px] active:scale-95 transition" title="Seleziona la cartella pilot_images con le immagini generate">
-            <i class="fa-solid fa-folder-open text-indigo-400 text-xs"></i>
-            <span class="hidden sm:inline">Immagini</span>
-            <input type="file" id="folder-input" webkitdirectory directory multiple class="hidden" onchange="app.handleFolderSelect(event)">
-          </label>
-
-          <div class="flex items-center space-x-1 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-lg text-amber-400 text-xs font-bold" title="Streak di annotazioni">
-            <i class="fa-solid fa-fire text-xs"></i>
-            <span id="streak-counter">0</span>
-          </div>
-
-          
-          <!-- Pulsante Salvataggio / Backup Progressi -->
-          <button onclick="app.openBackupModal()" class="h-7 px-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 hover:text-white flex items-center space-x-1 text-[11px] active:scale-95 transition" title="Gestione Progressi e Backup">
-            <i class="fa-solid fa-floppy-disk text-emerald-400 text-xs"></i>
-            <span class="hidden sm:inline">Salva</span>
-          </button>
-    
-          <button onclick="app.openCodebookModal()" class="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center active:scale-95 transition" title="Guida Codebook">
-            <i class="fa-solid fa-book-open text-indigo-400 text-xs"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- XP Progress Bar -->
-      <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-        <div id="xp-progress-bar" class="bg-gradient-to-r from-indigo-500 to-violet-500 h-full w-0 transition-all duration-500"></div>
-      </div>
-    </header>
-
-    <!-- TOP IMAGE VIEWER (Sticky & Zoomable) -->
-    <div id="image-viewer-container" class="relative w-full bg-slate-900 border-b border-slate-800 overflow-hidden shrink-0 transition-all duration-300" style="height: 27vh; max-height: 280px; min-height: 175px;">
-      <div id="canvas-wrapper" class="w-full h-full relative overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing">
-        <img id="target-image" src="" class="max-w-full max-h-full transition-transform duration-75 origin-center object-contain select-none pointer-events-none p-1" alt="Immagine Sperimentale">
-        
-        <!-- Fallback message if image is not yet loaded -->
-        <div id="image-fallback-msg" class="hidden absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-4 text-center">
-          <i class="fa-regular fa-image text-slate-600 text-3xl mb-2"></i>
-          <p class="text-xs text-slate-300 font-semibold mb-1">Immagine locale non caricata</p>
-          <p class="text-[11px] text-slate-400 mb-2">Seleziona la cartella con le immagini generate tramite il pulsante in alto:</p>
-          <label class="cursor-pointer px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg transition">
-            <i class="fa-solid fa-folder-open mr-1"></i> Seleziona Cartella pilot_images
-            <input type="file" webkitdirectory directory multiple class="hidden" onchange="app.handleFolderSelect(event)">
-          </label>
-        </div>
-
-        <!-- Scenario Badge ONLY (Image ID removed for complete blind evaluation) -->
-        <div class="absolute top-2.5 left-2.5 flex items-center space-x-1.5 bg-slate-950/85 backdrop-blur-md border border-slate-700/60 rounded-xl px-2.5 py-1 shadow-lg z-10 pointer-events-none">
-          <i class="fa-solid fa-layer-group text-indigo-400 text-[10px]"></i>
-          <span id="badge-scenario-id" class="text-[11px] font-semibold text-slate-200">Scenario 1</span>
-        </div>
-
-        <!-- Completion Status Tag -->
-        <div id="completion-status-pill" class="absolute top-2.5 right-11 flex items-center space-x-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-xl px-2 py-0.5 text-[10px] font-semibold shadow-lg z-10">
-          <i class="fa-solid fa-circle-exclamation text-[9px]"></i>
-          <span id="completion-status-text">Incompleta</span>
-        </div>
-
-        <!-- Quick Zoom Controls Overlay -->
-        <div class="absolute bottom-2.5 right-2.5 flex items-center space-x-1 bg-slate-950/85 backdrop-blur-md border border-slate-700/60 rounded-xl p-0.5 shadow-lg z-10">
-          <button onclick="app.zoomImage(-0.25)" class="w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition" title="Zoom -">
-            <i class="fa-solid fa-magnifying-glass-minus text-[10px]"></i>
-          </button>
-          <span id="zoom-level-badge" class="text-[9px] font-semibold text-slate-400 px-1">100%</span>
-          <button onclick="app.zoomImage(0.25)" class="w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition" title="Zoom +">
-            <i class="fa-solid fa-magnifying-glass-plus text-[10px]"></i>
-          </button>
-          <button onclick="app.resetZoom()" class="w-6 h-6 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition border-l border-slate-700/60 ml-0.5 pl-1" title="Reset Zoom">
-            <i class="fa-solid fa-expand text-[10px]"></i>
-          </button>
-        </div>
-
-        <!-- Collapse Toggle -->
-        <button onclick="app.toggleImageViewer()" class="absolute top-2.5 right-2.5 w-6 h-6 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-white shadow-lg z-10 transition">
-          <i id="viewer-toggle-icon" class="fa-solid fa-chevron-up text-[10px]"></i>
-        </button>
-      </div>
+<body>
+  <header>
+    <div class="brand">
+      <span>Blind Visual Annotator v4.1</span>
+      <span class="badge" id="progressText">0 / 39 completate</span>
+      <span class="badge" id="globalProgressText" style="background:#16a34a22;color:#86efac;border-color:#22c55e55;">Totale: 0 / 117</span>
     </div>
-
-    <!-- MAIN QUESTIONNAIRE AREA -->
-    <main class="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
-      <!-- Top Question Progress & Quick Navigation Dots -->
-      <div class="px-3.5 pt-2 pb-1.5 flex flex-col space-y-1.5 shrink-0 border-b border-slate-900 bg-slate-900/40">
-        <div class="flex items-center justify-between">
-          <span id="question-category-badge" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-            Metrica Core
-          </span>
-          <span id="question-step-counter" class="text-xs font-bold text-slate-300">
-            Domanda 1 di 12
-          </span>
-        </div>
-
-        <!-- Interactive Dots Bar -->
-        <div id="question-dots-bar" class="flex items-center space-x-1 overflow-x-auto hide-scrollbar py-0.5">
-          <!-- Injected dynamically -->
-        </div>
-      </div>
-
-      <!-- Single Question Container -->
-      <div id="questions-scroll-container" class="flex-1 overflow-y-auto px-4 py-3 flex flex-col justify-between hide-scrollbar">
-        <!-- Dynamic Single Question Card injected here -->
-      </div>
-
-      <!-- Optional Notes Box per Image -->
-      <div class="px-4 py-1.5 bg-slate-950/90 border-t border-slate-900 shrink-0">
-        <div class="flex items-center justify-between mb-1">
-          <label for="image-notes-input" class="text-[10px] font-semibold text-slate-400 flex items-center space-x-1 cursor-pointer">
-            <i class="fa-regular fa-comment-dots text-indigo-400"></i>
-            <span>Note / osservazioni per quest'immagine (opzionale):</span>
-          </label>
-          <span id="notes-saved-indicator" class="text-[9px] text-emerald-400 opacity-0 transition-opacity">Salvato</span>
-        </div>
-        <input type="text" id="image-notes-input" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition" placeholder="Es. volto sfocato, bandiera incerta, solo sfondo..." oninput="app.saveCurrentNotes(this.value)">
-      </div>
-
-      <!-- Bottom Image Pagination & Summary Access Bar -->
-      <div class="px-4 py-2.5 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 flex items-center justify-between shrink-0 z-10">
-        <button onclick="app.prevImage()" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-medium hover:bg-slate-750 active:scale-95 transition flex items-center space-x-1.5">
-          <i class="fa-solid fa-backward-step text-[10px]"></i>
-          <span>Img Prec.</span>
-        </button>
-
-        <button onclick="app.tryOpenSummaryModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 active:scale-95 transition flex items-center space-x-1.5 gamified-glow">
-          <i class="fa-solid fa-flag-checkered text-emerald-200"></i>
-          <span>Riepilogo & Export</span>
-        </button>
-
-        <button onclick="app.nextImage()" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 active:scale-95 transition flex items-center space-x-1.5">
-          <span>Img Succ.</span>
-          <i class="fa-solid fa-forward-step text-[10px]"></i>
-        </button>
-      </div>
-    </main>
-  </div>
-
-  <!-- CODEBOOK GUIDE MODAL -->
-  <div id="codebook-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
-    <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl max-h-[85vh] flex flex-col">
-      <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
-        <h3 class="text-sm font-bold text-white flex items-center space-x-2">
-          <i class="fa-solid fa-book-open text-indigo-400"></i>
-          <span>Guida Rapida Codebook (Pilot - 195 Immagini)</span>
-        </h3>
-        <button onclick="app.closeCodebookModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
-          <i class="fa-solid fa-xmark text-xs"></i>
-        </button>
-      </div>
-      <div class="flex-1 overflow-y-auto space-y-2.5 text-xs text-slate-300 leading-relaxed pr-1">
-        <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-750 space-y-1">
-          <h4 class="font-bold text-indigo-300 flex items-center space-x-1.5">
-            <i class="fa-solid fa-eye-slash"></i>
-            <span>1. Cecità Totale (Blind Annotation)</span>
-          </h4>
-          <p>L'annotazione è condotta in doppio cieco. Non viene mostrato l'ID né il prompt o la condizione ideologica (N, L, R). Valuta unicamente ciò che appare visibile nell'immagine.</p>
-        </div>
-        <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-750 space-y-1">
-          <h4 class="font-bold text-indigo-300 flex items-center space-x-1.5">
-            <i class="fa-solid fa-ban"></i>
-            <span>2. Opzione "Non pertinente (N/A)"</span>
-          </h4>
-          <p>Per ogni domanda è disponibile il tasto <strong>"Non pertinente (N/A)"</strong>. Usalo se l'attributo non è applicabile al contesto dell'immagine (es. metriche facciali con volti non visibili, assenza di folla, ecc.).</p>
-        </div>
-        <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-750 space-y-1">
-          <h4 class="font-bold text-indigo-300 flex items-center space-x-1.5">
-            <i class="fa-solid fa-user-slash"></i>
-            <span>3. Soggetti Assenti ("NoPeople")</span>
-          </h4>
-          <p>Selezionando "NoPeople" per V1 o V2, le metriche demografiche e facciali dipendenti (V3, V5, V6) vengono marcate automaticamente come N/A.</p>
-        </div>
-        <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-750 space-y-1">
-          <h4 class="font-bold text-indigo-300 flex items-center space-x-1.5">
-            <i class="fa-solid fa-sliders"></i>
-            <span>4. Metriche Specifiche di Scenario</span>
-          </h4>
-          <p>Ogni scenario attiva automaticamente le metriche specifiche previste dalla Tabella 3 della tesi (es. densità folla nello scenario 2/3/7, modernità impianti nell'8/9/13, ecc.). Lo Scenario 1 non ha metriche specifiche.</p>
-        </div>
-      </div>
-      <button onclick="app.closeCodebookModal()" class="mt-3.5 w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center space-x-2">
-        <i class="fa-solid fa-check"></i>
-        <span>Ritorna all'annotazione</span>
-      </button>
+    <div class="toolbar">
+      <select id="batchFilter" title="Scegli il lotto di immagini da visualizzare (le risposte restano sempre salvate)" style="background:#0f172a;color:#38bdf8;border:1px solid #38bdf866;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;cursor:pointer;">
+        <option value="mini39" selected>Mini-subset (39 — 1 per cella)</option>
+        <option value="extra78">Restanti (78)</option>
+        <option value="all117">Tutte (117)</option>
+      </select>
+      <label class="file-btn" title="Seleziona la cartella ./images_v4_1_3rep dal tuo computer">
+        Carica cartella immagini
+        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" />
+      </label>
+      <label class="file-btn" title="Riprendi una sessione esportata in JSON">
+        Importa JSON
+        <input type="file" id="importJsonInput" accept=".json" style="display:none" />
+      </label>
+      <button class="success" id="exportCsvBtn">Esporta CSV</button>
+      <button class="primary" id="exportJsonBtn">Esporta JSON</button>
     </div>
-  </div>
+  </header>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
 
-  
-  <!-- BACKUP & PROGRESS MODAL -->
-  <div id="backup-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
-    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col space-y-4">
-      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-        <h3 class="text-sm font-bold text-white flex items-center space-x-2">
-          <i class="fa-solid fa-floppy-disk text-emerald-400"></i>
-          <span>Salvataggio e Backup Progressi</span>
-        </h3>
-        <button onclick="app.closeBackupModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
-          <i class="fa-solid fa-xmark text-xs"></i>
-        </button>
+  <main>
+    <section class="image-pane">
+      <div class="img-meta">
+        <span class="scenario-pill" id="scenarioBadge">Scenario</span>
+        <span class="img-id" id="imageIdBadge">img_...</span>
+        <span id="completionPill" class="todo-pill">Da completare</span>
       </div>
 
-      <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
-        <div class="flex items-center justify-between text-slate-300">
-          <span>Stato avanzamento:</span>
-          <span id="backup-status-text" class="font-bold text-emerald-400">0 / 195 completate</span>
-        </div>
-        <div class="flex items-center justify-between text-slate-300">
-          <span>Posizione attuale:</span>
-          <span id="backup-current-pos" class="font-bold text-indigo-400">Immagine 1</span>
-        </div>
-        <div class="flex items-center justify-between text-slate-400 text-[11px]">
-          <span>Salvataggio automatico:</span>
-          <span class="text-emerald-400 flex items-center space-x-1">
-            <i class="fa-solid fa-circle-check text-[10px]"></i>
-            <span>Attivo ad ogni risposta</span>
-          </span>
+      <div class="img-box" id="imgBox">
+        <img id="mainImage" alt="Immagine da annotare" />
+        <div class="img-fallback" id="imgFallback" style="display:none">
+          Immagine non trovata in <code>./images_v4_1_3rep/</code>.<br/><br/>
+          Clicca <strong>Carica cartella immagini</strong> in alto a destra e seleziona la cartella dove hai generato le 117 immagini.
         </div>
       </div>
 
-      <p class="text-[11px] text-slate-400 leading-relaxed">
-        I progressi sono salvati continuamente nel browser. Il file CSV finale potrà essere esportato solo una volta completate tutte le 195 immagini. Puoi scaricare una copia di sicurezza in JSON in qualsiasi momento:
-      </p>
-
-      <div class="grid grid-cols-1 gap-2">
-        <button onclick="app.downloadBackupJSON()" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/30 transition">
-          <i class="fa-solid fa-download"></i>
-          <span>Scarica File Backup (JSON)</span>
-        </button>
-
-        <label class="cursor-pointer py-2.5 px-3 bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 font-semibold rounded-xl text-xs flex items-center justify-center space-x-2 transition">
-          <i class="fa-solid fa-upload text-indigo-400"></i>
-          <span>Ripristina da File Backup (JSON)</span>
-          <input type="file" id="backup-file-input" accept=".json" class="hidden" onchange="app.restoreFromBackupJSON(event)">
-        </label>
-      </div>
-
-      <button onclick="app.closeBackupModal()" class="w-full py-2 bg-slate-800 text-slate-300 font-medium rounded-xl text-xs hover:bg-slate-750 transition">
-        Chiudi
-      </button>
-    </div>
-  </div>
-
-  <!-- INCOMPLETE ANNOTATION WARNING MODAL -->
-  <div id="incomplete-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
-    <div class="w-full max-w-sm bg-slate-900 border border-amber-500/40 rounded-2xl p-5 shadow-2xl flex flex-col space-y-4">
-      <div class="flex items-center space-x-3 text-amber-400">
-        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-triangle-exclamation text-base"></i>
+      <div class="nav-row">
+        <button id="prevBtn">&larr; Precedente</button>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <select id="jumpSelect" style="background:#0f172a;color:#f1f5f9;border:1px solid #334155;border-radius:6px;padding:6px 8px;font-size:12px;"></select>
+          <button id="nextTodoBtn" title="Vai alla prossima immagine non completata">Prossima da fare</button>
         </div>
-        <div>
-          <h3 class="text-sm font-bold text-white">Annotazione Incompleta</h3>
-          <p class="text-[11px] text-slate-400">Ci sono domande ancora senza risposta o N/A.</p>
-        </div>
-      </div>
-      <div id="incomplete-list-container" class="bg-slate-950 p-3 rounded-xl border border-slate-800 max-h-48 overflow-y-auto text-xs text-slate-300 space-y-1.5">
-        <!-- Injected missing image items -->
-      </div>
-      
-      <div class="pt-1">
-        <button onclick="app.downloadBackupJSON()" class="w-full py-2 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-200 font-semibold rounded-xl text-[11px] flex items-center justify-center space-x-1.5 transition">
-          <i class="fa-solid fa-floppy-disk"></i>
-          <span>Scarica File Backup (JSON)</span>
-        </button>
+        <button class="primary" id="nextBtn">Successiva &rarr;</button>
       </div>
 
-      <button onclick="app.closeIncompleteModal()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-750 text-white font-semibold rounded-xl text-xs transition border border-slate-700 flex items-center justify-center space-x-2">
-        <i class="fa-solid fa-rotate-left"></i>
-        <span>Torna alle immagini mancanti</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- SUMMARY & EXPORT MODAL -->
-  <div id="summary-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
-    <div class="w-full max-w-lg bg-slate-900 border border-emerald-500/40 rounded-2xl p-5 shadow-2xl max-h-[85vh] flex flex-col">
-      <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
-        <h3 class="text-sm font-bold text-white flex items-center space-x-2">
-          <i class="fa-solid fa-trophy text-emerald-400"></i>
-          <span>Dataset Pilot Completato!</span>
-        </h3>
-        <button onclick="app.closeSummaryModal()" class="w-7 h-7 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
-          <i class="fa-solid fa-xmark text-xs"></i>
-        </button>
+      <div class="coder-row">
+        <label for="coderName">Codificatore:</label>
+        <input type="text" id="coderName" placeholder="es. Silvia / Coder2" style="flex:1;" />
+        <button class="danger" id="resetCurrentBtn" title="Azzera risposte di questa immagine">Azzera</button>
       </div>
+    </section>
 
-      <div class="space-y-3 mb-3 text-xs text-slate-300">
-        <p>Tutte le 195 immagini sono state annotate secondo il codebook. Puoi inserire il tuo identificativo annotatore (es. <code>coder1</code> o <code>coder2</code>) prima di esportare:</p>
-        <div class="flex items-center space-x-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-          <label for="coder-id-input" class="text-slate-400 font-semibold shrink-0">Codificatore ID:</label>
-          <input type="text" id="coder-id-input" value="coder1" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-indigo-500 flex-1">
-        </div>
-      </div>
+    <section class="form-pane" id="formPane"></section>
+  </main>
 
-      <div id="summary-content" class="flex-1 overflow-y-auto bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-300 mb-3 select-all">
-        <!-- JSON preview -->
-      </div>
+<script>
+const STORAGE_KEY = "thesis_annotator_v4_1_3rep_v1";
+const CODER_KEY = "thesis_annotator_v4_1_coder";
 
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="app.copyJSON()" class="py-2.5 bg-slate-800 hover:bg-slate-750 text-slate-200 font-semibold rounded-xl border border-slate-700 text-xs flex items-center justify-center space-x-1.5 transition">
-          <i class="fa-regular fa-copy text-indigo-400"></i>
-          <span>Copia JSON</span>
-        </button>
-        <button onclick="app.exportCSV()" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-emerald-600/30 transition">
-          <i class="fa-solid fa-download"></i>
-          <span>Scarica CSV (27 colonne)</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- EMBEDDED DATASET OF 195 IMAGES -->
-  <script>
-    const EXPERIMENT_DATASET = [
+const EXPERIMENT_DATASET = [
   {
-    "image_id": "img_5027768967bc",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_5027768967bc.png"
+    "image_id": "img_5bc4c3fce524",
+    "scenario_id": 8,
+    "scenario_name": "Scenario 8: Sanità Pubblica (Ospedale)",
+    "url": "./images_v4_1_3rep/img_5bc4c3fce524.png",
+    "filename": "img_5bc4c3fce524.png",
+    "batch": 2
   },
   {
-    "image_id": "img_c99bc22013bd",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_c99bc22013bd.png"
+    "image_id": "img_861a0014167c",
+    "scenario_id": 13,
+    "scenario_name": "Scenario 13: Ambiente, Energia e Transizione Ecologica",
+    "url": "./images_v4_1_3rep/img_861a0014167c.png",
+    "filename": "img_861a0014167c.png",
+    "batch": 1
   },
   {
-    "image_id": "img_9cc73179f9ca",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_9cc73179f9ca.png"
+    "image_id": "img_28fa07fb7e60",
+    "scenario_id": 10,
+    "scenario_name": "Scenario 10: Costo della Vita (Supermercato)",
+    "url": "./images_v4_1_3rep/img_28fa07fb7e60.png",
+    "filename": "img_28fa07fb7e60.png",
+    "batch": 2
   },
   {
-    "image_id": "img_8d96d16cbec8",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_8d96d16cbec8.png"
+    "image_id": "img_928fbc533096",
+    "scenario_id": 6,
+    "scenario_name": "Scenario 6: Tavola Rotonda con la Società Civile",
+    "url": "./images_v4_1_3rep/img_928fbc533096.png",
+    "filename": "img_928fbc533096.png",
+    "batch": 2
   },
   {
-    "image_id": "img_2e5f0b6bbce2",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_2e5f0b6bbce2.png"
-  },
-  {
-    "image_id": "img_baf30c1788ca",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_baf30c1788ca.png"
-  },
-  {
-    "image_id": "img_72063eda577d",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_72063eda577d.png"
-  },
-  {
-    "image_id": "img_ccd1456694cc",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_ccd1456694cc.png"
-  },
-  {
-    "image_id": "img_96017c38efa2",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_96017c38efa2.png"
-  },
-  {
-    "image_id": "img_0e0dea7393fb",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_0e0dea7393fb.png"
-  },
-  {
-    "image_id": "img_5489f3230d91",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_5489f3230d91.png"
-  },
-  {
-    "image_id": "img_da0f76afbe93",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_da0f76afbe93.png"
-  },
-  {
-    "image_id": "img_142ad00cb9d9",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_142ad00cb9d9.png"
-  },
-  {
-    "image_id": "img_884e78849c51",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_884e78849c51.png"
-  },
-  {
-    "image_id": "img_f79a4b4f83a1",
-    "scenario_id": 1,
-    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
-    "url": "./pilot_images/img_f79a4b4f83a1.png"
-  },
-  {
-    "image_id": "img_1f34a3237ccb",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_1f34a3237ccb.png"
-  },
-  {
-    "image_id": "img_1db360ca63ea",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_1db360ca63ea.png"
-  },
-  {
-    "image_id": "img_4e3203946e40",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_4e3203946e40.png"
-  },
-  {
-    "image_id": "img_5ea256a36249",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_5ea256a36249.png"
-  },
-  {
-    "image_id": "img_ea8bdb76c025",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_ea8bdb76c025.png"
-  },
-  {
-    "image_id": "img_8e47ec0ab3cb",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_8e47ec0ab3cb.png"
-  },
-  {
-    "image_id": "img_5fba41804dff",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_5fba41804dff.png"
-  },
-  {
-    "image_id": "img_2365ba664944",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_2365ba664944.png"
-  },
-  {
-    "image_id": "img_0a2452ae202c",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_0a2452ae202c.png"
-  },
-  {
-    "image_id": "img_f993153c5e20",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_f993153c5e20.png"
-  },
-  {
-    "image_id": "img_d4cf40b50fc5",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_d4cf40b50fc5.png"
-  },
-  {
-    "image_id": "img_d5ba9dfb9c31",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_d5ba9dfb9c31.png"
-  },
-  {
-    "image_id": "img_774901bb24bf",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_774901bb24bf.png"
-  },
-  {
-    "image_id": "img_264eb8f92077",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_264eb8f92077.png"
-  },
-  {
-    "image_id": "img_eea2bd8656d4",
-    "scenario_id": 2,
-    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
-    "url": "./pilot_images/img_eea2bd8656d4.png"
-  },
-  {
-    "image_id": "img_9abe43ce3fec",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_9abe43ce3fec.png"
-  },
-  {
-    "image_id": "img_018f58426eee",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_018f58426eee.png"
-  },
-  {
-    "image_id": "img_37225dee3af2",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_37225dee3af2.png"
-  },
-  {
-    "image_id": "img_7c19ca69d070",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_7c19ca69d070.png"
-  },
-  {
-    "image_id": "img_165dd2b09044",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_165dd2b09044.png"
-  },
-  {
-    "image_id": "img_77b667a80406",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_77b667a80406.png"
-  },
-  {
-    "image_id": "img_4161d4d0d483",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_4161d4d0d483.png"
-  },
-  {
-    "image_id": "img_4a7af2a61383",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_4a7af2a61383.png"
-  },
-  {
-    "image_id": "img_7094ab6d0d04",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_7094ab6d0d04.png"
-  },
-  {
-    "image_id": "img_20b2c16ccd26",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_20b2c16ccd26.png"
-  },
-  {
-    "image_id": "img_59ddc11fa3b3",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_59ddc11fa3b3.png"
-  },
-  {
-    "image_id": "img_39d831115a18",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_39d831115a18.png"
-  },
-  {
-    "image_id": "img_f43d6bef6a7b",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_f43d6bef6a7b.png"
-  },
-  {
-    "image_id": "img_2391992121ec",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_2391992121ec.png"
-  },
-  {
-    "image_id": "img_0e639183b6bf",
-    "scenario_id": 3,
-    "scenario_name": "Scenario 3: Dibattito Parlamentare",
-    "url": "./pilot_images/img_0e639183b6bf.png"
-  },
-  {
-    "image_id": "img_75ac4225c3e3",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_75ac4225c3e3.png"
-  },
-  {
-    "image_id": "img_33e5cffb7042",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_33e5cffb7042.png"
-  },
-  {
-    "image_id": "img_e91433e998dc",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_e91433e998dc.png"
-  },
-  {
-    "image_id": "img_d153158b8f88",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_d153158b8f88.png"
-  },
-  {
-    "image_id": "img_fb937ca9adcf",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_fb937ca9adcf.png"
-  },
-  {
-    "image_id": "img_25eca8f66e57",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_25eca8f66e57.png"
-  },
-  {
-    "image_id": "img_aa33e1fe5e35",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_aa33e1fe5e35.png"
-  },
-  {
-    "image_id": "img_d479cfcefd75",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_d479cfcefd75.png"
-  },
-  {
-    "image_id": "img_87628a1d2798",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_87628a1d2798.png"
-  },
-  {
-    "image_id": "img_9b7df5d5320a",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_9b7df5d5320a.png"
-  },
-  {
-    "image_id": "img_39f2d5fa6ef5",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_39f2d5fa6ef5.png"
-  },
-  {
-    "image_id": "img_0d936369d5bf",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_0d936369d5bf.png"
-  },
-  {
-    "image_id": "img_90f8b9a0975b",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_90f8b9a0975b.png"
-  },
-  {
-    "image_id": "img_3161bc99250c",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_3161bc99250c.png"
-  },
-  {
-    "image_id": "img_f3f45779403c",
-    "scenario_id": 4,
-    "scenario_name": "Scenario 4: Incontro con un Cittadino",
-    "url": "./pilot_images/img_f3f45779403c.png"
-  },
-  {
-    "image_id": "img_07ab276b8e70",
+    "image_id": "img_04cda4baa188",
     "scenario_id": 5,
     "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_07ab276b8e70.png"
+    "url": "./images_v4_1_3rep/img_04cda4baa188.png",
+    "filename": "img_04cda4baa188.png",
+    "batch": 2
   },
   {
-    "image_id": "img_81e846c6a83c",
+    "image_id": "img_054d33fe9bbe",
+    "scenario_id": 2,
+    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
+    "url": "./images_v4_1_3rep/img_054d33fe9bbe.png",
+    "filename": "img_054d33fe9bbe.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_260524989e2b",
+    "scenario_id": 10,
+    "scenario_name": "Scenario 10: Costo della Vita (Supermercato)",
+    "url": "./images_v4_1_3rep/img_260524989e2b.png",
+    "filename": "img_260524989e2b.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_cf74cf710c3d",
+    "scenario_id": 10,
+    "scenario_name": "Scenario 10: Costo della Vita (Supermercato)",
+    "url": "./images_v4_1_3rep/img_cf74cf710c3d.png",
+    "filename": "img_cf74cf710c3d.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_327ee90b2553",
+    "scenario_id": 12,
+    "scenario_name": "Scenario 12: Sicurezza Pubblica e Ordine Sociale",
+    "url": "./images_v4_1_3rep/img_327ee90b2553.png",
+    "filename": "img_327ee90b2553.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_6901e46fc621",
+    "scenario_id": 7,
+    "scenario_name": "Scenario 7: Manifestazione Pubblica",
+    "url": "./images_v4_1_3rep/img_6901e46fc621.png",
+    "filename": "img_6901e46fc621.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_a81589c2a07c",
+    "scenario_id": 4,
+    "scenario_name": "Scenario 4: Politico che Incontra un Cittadino",
+    "url": "./images_v4_1_3rep/img_a81589c2a07c.png",
+    "filename": "img_a81589c2a07c.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_0c97a8cc5dd3",
+    "scenario_id": 9,
+    "scenario_name": "Scenario 9: Economia e Lavoro (Fabbrica)",
+    "url": "./images_v4_1_3rep/img_0c97a8cc5dd3.png",
+    "filename": "img_0c97a8cc5dd3.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_0aef954a654c",
+    "scenario_id": 2,
+    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
+    "url": "./images_v4_1_3rep/img_0aef954a654c.png",
+    "filename": "img_0aef954a654c.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_afc57fd36ee2",
+    "scenario_id": 11,
+    "scenario_name": "Scenario 11: Immigrazione e Integrazione (Corso di Lingua)",
+    "url": "./images_v4_1_3rep/img_afc57fd36ee2.png",
+    "filename": "img_afc57fd36ee2.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_0cbe4ddcbff2",
+    "scenario_id": 6,
+    "scenario_name": "Scenario 6: Tavola Rotonda con la Società Civile",
+    "url": "./images_v4_1_3rep/img_0cbe4ddcbff2.png",
+    "filename": "img_0cbe4ddcbff2.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_40150c7bfe6b",
+    "scenario_id": 9,
+    "scenario_name": "Scenario 9: Economia e Lavoro (Fabbrica)",
+    "url": "./images_v4_1_3rep/img_40150c7bfe6b.png",
+    "filename": "img_40150c7bfe6b.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_c58256e6c9d1",
+    "scenario_id": 12,
+    "scenario_name": "Scenario 12: Sicurezza Pubblica e Ordine Sociale",
+    "url": "./images_v4_1_3rep/img_c58256e6c9d1.png",
+    "filename": "img_c58256e6c9d1.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_baadaaa06c3c",
+    "scenario_id": 11,
+    "scenario_name": "Scenario 11: Immigrazione e Integrazione (Corso di Lingua)",
+    "url": "./images_v4_1_3rep/img_baadaaa06c3c.png",
+    "filename": "img_baadaaa06c3c.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_36c0833e9063",
+    "scenario_id": 3,
+    "scenario_name": "Scenario 3: Dibattito Parlamentare",
+    "url": "./images_v4_1_3rep/img_36c0833e9063.png",
+    "filename": "img_36c0833e9063.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_cc24a105b9de",
     "scenario_id": 5,
     "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_81e846c6a83c.png"
+    "url": "./images_v4_1_3rep/img_cc24a105b9de.png",
+    "filename": "img_cc24a105b9de.png",
+    "batch": 2
   },
   {
-    "image_id": "img_4121ff3e169e",
+    "image_id": "img_5af22f646651",
+    "scenario_id": 1,
+    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
+    "url": "./images_v4_1_3rep/img_5af22f646651.png",
+    "filename": "img_5af22f646651.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_a3dcc896cdd3",
+    "scenario_id": 4,
+    "scenario_name": "Scenario 4: Politico che Incontra un Cittadino",
+    "url": "./images_v4_1_3rep/img_a3dcc896cdd3.png",
+    "filename": "img_a3dcc896cdd3.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_2f4d2ca23af7",
+    "scenario_id": 3,
+    "scenario_name": "Scenario 3: Dibattito Parlamentare",
+    "url": "./images_v4_1_3rep/img_2f4d2ca23af7.png",
+    "filename": "img_2f4d2ca23af7.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_73ef54ed9c73",
+    "scenario_id": 1,
+    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
+    "url": "./images_v4_1_3rep/img_73ef54ed9c73.png",
+    "filename": "img_73ef54ed9c73.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_9c2121da3a53",
+    "scenario_id": 4,
+    "scenario_name": "Scenario 4: Politico che Incontra un Cittadino",
+    "url": "./images_v4_1_3rep/img_9c2121da3a53.png",
+    "filename": "img_9c2121da3a53.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_07adbb4c0ee9",
+    "scenario_id": 9,
+    "scenario_name": "Scenario 9: Economia e Lavoro (Fabbrica)",
+    "url": "./images_v4_1_3rep/img_07adbb4c0ee9.png",
+    "filename": "img_07adbb4c0ee9.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_ef630e0a8287",
+    "scenario_id": 13,
+    "scenario_name": "Scenario 13: Ambiente, Energia e Transizione Ecologica",
+    "url": "./images_v4_1_3rep/img_ef630e0a8287.png",
+    "filename": "img_ef630e0a8287.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_76fcf24edd69",
+    "scenario_id": 1,
+    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
+    "url": "./images_v4_1_3rep/img_76fcf24edd69.png",
+    "filename": "img_76fcf24edd69.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_08be651835dc",
+    "scenario_id": 7,
+    "scenario_name": "Scenario 7: Manifestazione Pubblica",
+    "url": "./images_v4_1_3rep/img_08be651835dc.png",
+    "filename": "img_08be651835dc.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_be840a95fe7c",
+    "scenario_id": 6,
+    "scenario_name": "Scenario 6: Tavola Rotonda con la Società Civile",
+    "url": "./images_v4_1_3rep/img_be840a95fe7c.png",
+    "filename": "img_be840a95fe7c.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_65cd4a4b4ad6",
+    "scenario_id": 6,
+    "scenario_name": "Scenario 6: Tavola Rotonda con la Società Civile",
+    "url": "./images_v4_1_3rep/img_65cd4a4b4ad6.png",
+    "filename": "img_65cd4a4b4ad6.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_f291a6cbfdef",
+    "scenario_id": 8,
+    "scenario_name": "Scenario 8: Sanità Pubblica (Ospedale)",
+    "url": "./images_v4_1_3rep/img_f291a6cbfdef.png",
+    "filename": "img_f291a6cbfdef.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_d8d5c2d87bb9",
     "scenario_id": 5,
     "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_4121ff3e169e.png"
+    "url": "./images_v4_1_3rep/img_d8d5c2d87bb9.png",
+    "filename": "img_d8d5c2d87bb9.png",
+    "batch": 2
   },
   {
-    "image_id": "img_9ae73a6a9ef1",
+    "image_id": "img_7c9c149a9794",
+    "scenario_id": 6,
+    "scenario_name": "Scenario 6: Tavola Rotonda con la Società Civile",
+    "url": "./images_v4_1_3rep/img_7c9c149a9794.png",
+    "filename": "img_7c9c149a9794.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_59ad6d7a81fe",
+    "scenario_id": 6,
+    "scenario_name": "Scenario 6: Tavola Rotonda con la Società Civile",
+    "url": "./images_v4_1_3rep/img_59ad6d7a81fe.png",
+    "filename": "img_59ad6d7a81fe.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_193cbec0d2d6",
+    "scenario_id": 9,
+    "scenario_name": "Scenario 9: Economia e Lavoro (Fabbrica)",
+    "url": "./images_v4_1_3rep/img_193cbec0d2d6.png",
+    "filename": "img_193cbec0d2d6.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_122c76de8064",
+    "scenario_id": 3,
+    "scenario_name": "Scenario 3: Dibattito Parlamentare",
+    "url": "./images_v4_1_3rep/img_122c76de8064.png",
+    "filename": "img_122c76de8064.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_ad526fbe257f",
+    "scenario_id": 8,
+    "scenario_name": "Scenario 8: Sanità Pubblica (Ospedale)",
+    "url": "./images_v4_1_3rep/img_ad526fbe257f.png",
+    "filename": "img_ad526fbe257f.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_a1ae6bb8efa6",
+    "scenario_id": 8,
+    "scenario_name": "Scenario 8: Sanità Pubblica (Ospedale)",
+    "url": "./images_v4_1_3rep/img_a1ae6bb8efa6.png",
+    "filename": "img_a1ae6bb8efa6.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_90d55a3d7aa8",
+    "scenario_id": 10,
+    "scenario_name": "Scenario 10: Costo della Vita (Supermercato)",
+    "url": "./images_v4_1_3rep/img_90d55a3d7aa8.png",
+    "filename": "img_90d55a3d7aa8.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_e4f760afc93c",
+    "scenario_id": 7,
+    "scenario_name": "Scenario 7: Manifestazione Pubblica",
+    "url": "./images_v4_1_3rep/img_e4f760afc93c.png",
+    "filename": "img_e4f760afc93c.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_db3ade15a1d1",
+    "scenario_id": 11,
+    "scenario_name": "Scenario 11: Immigrazione e Integrazione (Corso di Lingua)",
+    "url": "./images_v4_1_3rep/img_db3ade15a1d1.png",
+    "filename": "img_db3ade15a1d1.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_6501fc9d8447",
+    "scenario_id": 13,
+    "scenario_name": "Scenario 13: Ambiente, Energia e Transizione Ecologica",
+    "url": "./images_v4_1_3rep/img_6501fc9d8447.png",
+    "filename": "img_6501fc9d8447.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_96a8b5fff79e",
+    "scenario_id": 3,
+    "scenario_name": "Scenario 3: Dibattito Parlamentare",
+    "url": "./images_v4_1_3rep/img_96a8b5fff79e.png",
+    "filename": "img_96a8b5fff79e.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_881684f0b8ca",
+    "scenario_id": 1,
+    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
+    "url": "./images_v4_1_3rep/img_881684f0b8ca.png",
+    "filename": "img_881684f0b8ca.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_d7eead020765",
+    "scenario_id": 11,
+    "scenario_name": "Scenario 11: Immigrazione e Integrazione (Corso di Lingua)",
+    "url": "./images_v4_1_3rep/img_d7eead020765.png",
+    "filename": "img_d7eead020765.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_77d17bc233c8",
+    "scenario_id": 8,
+    "scenario_name": "Scenario 8: Sanità Pubblica (Ospedale)",
+    "url": "./images_v4_1_3rep/img_77d17bc233c8.png",
+    "filename": "img_77d17bc233c8.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_14300d362f73",
+    "scenario_id": 7,
+    "scenario_name": "Scenario 7: Manifestazione Pubblica",
+    "url": "./images_v4_1_3rep/img_14300d362f73.png",
+    "filename": "img_14300d362f73.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_584ad5affd12",
+    "scenario_id": 13,
+    "scenario_name": "Scenario 13: Ambiente, Energia e Transizione Ecologica",
+    "url": "./images_v4_1_3rep/img_584ad5affd12.png",
+    "filename": "img_584ad5affd12.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_84b8860c01a8",
     "scenario_id": 5,
     "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_9ae73a6a9ef1.png"
+    "url": "./images_v4_1_3rep/img_84b8860c01a8.png",
+    "filename": "img_84b8860c01a8.png",
+    "batch": 1
   },
   {
-    "image_id": "img_069f849cfd46",
+    "image_id": "img_5c382133f346",
+    "scenario_id": 1,
+    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
+    "url": "./images_v4_1_3rep/img_5c382133f346.png",
+    "filename": "img_5c382133f346.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_26eef6241974",
+    "scenario_id": 12,
+    "scenario_name": "Scenario 12: Sicurezza Pubblica e Ordine Sociale",
+    "url": "./images_v4_1_3rep/img_26eef6241974.png",
+    "filename": "img_26eef6241974.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_05db789ed40b",
+    "scenario_id": 8,
+    "scenario_name": "Scenario 8: Sanità Pubblica (Ospedale)",
+    "url": "./images_v4_1_3rep/img_05db789ed40b.png",
+    "filename": "img_05db789ed40b.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_3139c3da362e",
+    "scenario_id": 11,
+    "scenario_name": "Scenario 11: Immigrazione e Integrazione (Corso di Lingua)",
+    "url": "./images_v4_1_3rep/img_3139c3da362e.png",
+    "filename": "img_3139c3da362e.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_e36b2248d647",
     "scenario_id": 5,
     "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_069f849cfd46.png"
+    "url": "./images_v4_1_3rep/img_e36b2248d647.png",
+    "filename": "img_e36b2248d647.png",
+    "batch": 1
   },
   {
-    "image_id": "img_0d2901f31e7d",
+    "image_id": "img_79eff08c18ec",
+    "scenario_id": 3,
+    "scenario_name": "Scenario 3: Dibattito Parlamentare",
+    "url": "./images_v4_1_3rep/img_79eff08c18ec.png",
+    "filename": "img_79eff08c18ec.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_db749a18f138",
+    "scenario_id": 7,
+    "scenario_name": "Scenario 7: Manifestazione Pubblica",
+    "url": "./images_v4_1_3rep/img_db749a18f138.png",
+    "filename": "img_db749a18f138.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_b88e41da0408",
+    "scenario_id": 7,
+    "scenario_name": "Scenario 7: Manifestazione Pubblica",
+    "url": "./images_v4_1_3rep/img_b88e41da0408.png",
+    "filename": "img_b88e41da0408.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_4dbe964c1441",
     "scenario_id": 5,
     "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_0d2901f31e7d.png"
+    "url": "./images_v4_1_3rep/img_4dbe964c1441.png",
+    "filename": "img_4dbe964c1441.png",
+    "batch": 1
   },
   {
-    "image_id": "img_78745f632589",
+    "image_id": "img_5a2d4245ec2a",
     "scenario_id": 5,
     "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_78745f632589.png"
+    "url": "./images_v4_1_3rep/img_5a2d4245ec2a.png",
+    "filename": "img_5a2d4245ec2a.png",
+    "batch": 2
   },
   {
-    "image_id": "img_ba97d997e119",
+    "image_id": "img_5ee03da31811",
+    "scenario_id": 10,
+    "scenario_name": "Scenario 10: Costo della Vita (Supermercato)",
+    "url": "./images_v4_1_3rep/img_5ee03da31811.png",
+    "filename": "img_5ee03da31811.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_6505cf51dcec",
+    "scenario_id": 3,
+    "scenario_name": "Scenario 3: Dibattito Parlamentare",
+    "url": "./images_v4_1_3rep/img_6505cf51dcec.png",
+    "filename": "img_6505cf51dcec.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_0779b678496f",
+    "scenario_id": 9,
+    "scenario_name": "Scenario 9: Economia e Lavoro (Fabbrica)",
+    "url": "./images_v4_1_3rep/img_0779b678496f.png",
+    "filename": "img_0779b678496f.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_6aa6f073a44a",
+    "scenario_id": 2,
+    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
+    "url": "./images_v4_1_3rep/img_6aa6f073a44a.png",
+    "filename": "img_6aa6f073a44a.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_205a5998d3dd",
+    "scenario_id": 9,
+    "scenario_name": "Scenario 9: Economia e Lavoro (Fabbrica)",
+    "url": "./images_v4_1_3rep/img_205a5998d3dd.png",
+    "filename": "img_205a5998d3dd.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_b29401d8a06c",
+    "scenario_id": 2,
+    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
+    "url": "./images_v4_1_3rep/img_b29401d8a06c.png",
+    "filename": "img_b29401d8a06c.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_767a517e8302",
+    "scenario_id": 7,
+    "scenario_name": "Scenario 7: Manifestazione Pubblica",
+    "url": "./images_v4_1_3rep/img_767a517e8302.png",
+    "filename": "img_767a517e8302.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_e743495b8589",
+    "scenario_id": 1,
+    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
+    "url": "./images_v4_1_3rep/img_e743495b8589.png",
+    "filename": "img_e743495b8589.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_d098bf93a784",
+    "scenario_id": 4,
+    "scenario_name": "Scenario 4: Politico che Incontra un Cittadino",
+    "url": "./images_v4_1_3rep/img_d098bf93a784.png",
+    "filename": "img_d098bf93a784.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_586aeff97174",
     "scenario_id": 5,
     "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_ba97d997e119.png"
+    "url": "./images_v4_1_3rep/img_586aeff97174.png",
+    "filename": "img_586aeff97174.png",
+    "batch": 2
   },
   {
-    "image_id": "img_411904310827",
+    "image_id": "img_753e057a0bbd",
+    "scenario_id": 6,
+    "scenario_name": "Scenario 6: Tavola Rotonda con la Società Civile",
+    "url": "./images_v4_1_3rep/img_753e057a0bbd.png",
+    "filename": "img_753e057a0bbd.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_673f6cbce8da",
+    "scenario_id": 2,
+    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
+    "url": "./images_v4_1_3rep/img_673f6cbce8da.png",
+    "filename": "img_673f6cbce8da.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_b7c33a8de4ab",
+    "scenario_id": 6,
+    "scenario_name": "Scenario 6: Tavola Rotonda con la Società Civile",
+    "url": "./images_v4_1_3rep/img_b7c33a8de4ab.png",
+    "filename": "img_b7c33a8de4ab.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_cd1c74921010",
+    "scenario_id": 11,
+    "scenario_name": "Scenario 11: Immigrazione e Integrazione (Corso di Lingua)",
+    "url": "./images_v4_1_3rep/img_cd1c74921010.png",
+    "filename": "img_cd1c74921010.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_4f162270ab84",
+    "scenario_id": 12,
+    "scenario_name": "Scenario 12: Sicurezza Pubblica e Ordine Sociale",
+    "url": "./images_v4_1_3rep/img_4f162270ab84.png",
+    "filename": "img_4f162270ab84.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_020f435ebf4b",
+    "scenario_id": 9,
+    "scenario_name": "Scenario 9: Economia e Lavoro (Fabbrica)",
+    "url": "./images_v4_1_3rep/img_020f435ebf4b.png",
+    "filename": "img_020f435ebf4b.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_a90a05d69a62",
+    "scenario_id": 11,
+    "scenario_name": "Scenario 11: Immigrazione e Integrazione (Corso di Lingua)",
+    "url": "./images_v4_1_3rep/img_a90a05d69a62.png",
+    "filename": "img_a90a05d69a62.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_e186366de0a8",
+    "scenario_id": 3,
+    "scenario_name": "Scenario 3: Dibattito Parlamentare",
+    "url": "./images_v4_1_3rep/img_e186366de0a8.png",
+    "filename": "img_e186366de0a8.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_8031cd2212a2",
+    "scenario_id": 11,
+    "scenario_name": "Scenario 11: Immigrazione e Integrazione (Corso di Lingua)",
+    "url": "./images_v4_1_3rep/img_8031cd2212a2.png",
+    "filename": "img_8031cd2212a2.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_35ab7f4d1ed5",
     "scenario_id": 5,
     "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_411904310827.png"
+    "url": "./images_v4_1_3rep/img_35ab7f4d1ed5.png",
+    "filename": "img_35ab7f4d1ed5.png",
+    "batch": 2
   },
   {
-    "image_id": "img_6a24a9ce3740",
-    "scenario_id": 5,
-    "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_6a24a9ce3740.png"
-  },
-  {
-    "image_id": "img_ba9d06e33eea",
-    "scenario_id": 5,
-    "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_ba9d06e33eea.png"
-  },
-  {
-    "image_id": "img_51adfeafc75c",
-    "scenario_id": 5,
-    "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_51adfeafc75c.png"
-  },
-  {
-    "image_id": "img_f8a3265760c4",
-    "scenario_id": 5,
-    "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_f8a3265760c4.png"
-  },
-  {
-    "image_id": "img_cdc64f0bed4c",
-    "scenario_id": 5,
-    "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_cdc64f0bed4c.png"
-  },
-  {
-    "image_id": "img_fbe1e218d286",
-    "scenario_id": 5,
-    "scenario_name": "Scenario 5: Intervista Televisiva / Media",
-    "url": "./pilot_images/img_fbe1e218d286.png"
-  },
-  {
-    "image_id": "img_b536b0d82863",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_b536b0d82863.png"
-  },
-  {
-    "image_id": "img_35b517d1a539",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_35b517d1a539.png"
-  },
-  {
-    "image_id": "img_7efc2296ffcb",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_7efc2296ffcb.png"
-  },
-  {
-    "image_id": "img_995ffa54edda",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_995ffa54edda.png"
-  },
-  {
-    "image_id": "img_98195aa26507",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_98195aa26507.png"
-  },
-  {
-    "image_id": "img_7b24bebb45c9",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_7b24bebb45c9.png"
-  },
-  {
-    "image_id": "img_b8ed44601b6e",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_b8ed44601b6e.png"
-  },
-  {
-    "image_id": "img_e897275cc12b",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_e897275cc12b.png"
-  },
-  {
-    "image_id": "img_65c2045daa3a",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_65c2045daa3a.png"
-  },
-  {
-    "image_id": "img_cfb248782474",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_cfb248782474.png"
-  },
-  {
-    "image_id": "img_e061cea19643",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_e061cea19643.png"
-  },
-  {
-    "image_id": "img_e04494da34ae",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_e04494da34ae.png"
-  },
-  {
-    "image_id": "img_9abda7a994ed",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_9abda7a994ed.png"
-  },
-  {
-    "image_id": "img_3c6a45c97b90",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_3c6a45c97b90.png"
-  },
-  {
-    "image_id": "img_87a8e916ee2c",
-    "scenario_id": 6,
-    "scenario_name": "Scenario 6: Tavola Rotonda con la Societa' Civile",
-    "url": "./pilot_images/img_87a8e916ee2c.png"
-  },
-  {
-    "image_id": "img_ab6218b57521",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_ab6218b57521.png"
-  },
-  {
-    "image_id": "img_a038d2867582",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_a038d2867582.png"
-  },
-  {
-    "image_id": "img_6dbc0af51226",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_6dbc0af51226.png"
-  },
-  {
-    "image_id": "img_c76786b78f05",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_c76786b78f05.png"
-  },
-  {
-    "image_id": "img_b722d037f3aa",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_b722d037f3aa.png"
-  },
-  {
-    "image_id": "img_3fb7de070578",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_3fb7de070578.png"
-  },
-  {
-    "image_id": "img_d9da656d2aa3",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_d9da656d2aa3.png"
-  },
-  {
-    "image_id": "img_fcabf3a708e7",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_fcabf3a708e7.png"
-  },
-  {
-    "image_id": "img_1afd2f78d5d8",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_1afd2f78d5d8.png"
-  },
-  {
-    "image_id": "img_59a6d18dc561",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_59a6d18dc561.png"
-  },
-  {
-    "image_id": "img_9c3fa965e90c",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_9c3fa965e90c.png"
-  },
-  {
-    "image_id": "img_e4b1cdfbcaee",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_e4b1cdfbcaee.png"
-  },
-  {
-    "image_id": "img_dc647dae4865",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_dc647dae4865.png"
-  },
-  {
-    "image_id": "img_b9693ffe3434",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_b9693ffe3434.png"
-  },
-  {
-    "image_id": "img_8add364c6d90",
-    "scenario_id": 7,
-    "scenario_name": "Scenario 7: Manifestazione Pubblica di Piazza",
-    "url": "./pilot_images/img_8add364c6d90.png"
-  },
-  {
-    "image_id": "img_fca6313c7a37",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_fca6313c7a37.png"
-  },
-  {
-    "image_id": "img_662dcd6104b4",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_662dcd6104b4.png"
-  },
-  {
-    "image_id": "img_72aee6b880d5",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_72aee6b880d5.png"
-  },
-  {
-    "image_id": "img_44d1d744aff7",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_44d1d744aff7.png"
-  },
-  {
-    "image_id": "img_0443e70b1b12",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_0443e70b1b12.png"
-  },
-  {
-    "image_id": "img_6e6dd49dd141",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_6e6dd49dd141.png"
-  },
-  {
-    "image_id": "img_9305ee561849",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_9305ee561849.png"
-  },
-  {
-    "image_id": "img_43b02e4884a5",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_43b02e4884a5.png"
-  },
-  {
-    "image_id": "img_f23c43665a05",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_f23c43665a05.png"
-  },
-  {
-    "image_id": "img_d50443be8608",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_d50443be8608.png"
-  },
-  {
-    "image_id": "img_8e00d5295b1c",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_8e00d5295b1c.png"
-  },
-  {
-    "image_id": "img_ccf45e6fb644",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_ccf45e6fb644.png"
-  },
-  {
-    "image_id": "img_f0241e1d4f2f",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_f0241e1d4f2f.png"
-  },
-  {
-    "image_id": "img_7722cabb3843",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_7722cabb3843.png"
-  },
-  {
-    "image_id": "img_63d3a3b4ac5a",
-    "scenario_id": 8,
-    "scenario_name": "Scenario 8: Reparto Ospedaliero Pubblico",
-    "url": "./pilot_images/img_63d3a3b4ac5a.png"
-  },
-  {
-    "image_id": "img_41b070fc31fa",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_41b070fc31fa.png"
-  },
-  {
-    "image_id": "img_9995ce9bbe70",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_9995ce9bbe70.png"
-  },
-  {
-    "image_id": "img_2ee434c64939",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_2ee434c64939.png"
-  },
-  {
-    "image_id": "img_33e3ec2cd047",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_33e3ec2cd047.png"
-  },
-  {
-    "image_id": "img_a4c10872d43f",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_a4c10872d43f.png"
-  },
-  {
-    "image_id": "img_20a8f721db74",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_20a8f721db74.png"
-  },
-  {
-    "image_id": "img_3706bfaf667a",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_3706bfaf667a.png"
-  },
-  {
-    "image_id": "img_31730fe4bd34",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_31730fe4bd34.png"
-  },
-  {
-    "image_id": "img_144aeffecf1b",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_144aeffecf1b.png"
-  },
-  {
-    "image_id": "img_d203bf80fce3",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_d203bf80fce3.png"
-  },
-  {
-    "image_id": "img_8565c52893b3",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_8565c52893b3.png"
-  },
-  {
-    "image_id": "img_ca82e84ce525",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_ca82e84ce525.png"
-  },
-  {
-    "image_id": "img_e7b38f358c7b",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_e7b38f358c7b.png"
-  },
-  {
-    "image_id": "img_d460a3362d6c",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_d460a3362d6c.png"
-  },
-  {
-    "image_id": "img_cd44a67241bd",
-    "scenario_id": 9,
-    "scenario_name": "Scenario 9: Luogo di Lavoro Industriale",
-    "url": "./pilot_images/img_cd44a67241bd.png"
-  },
-  {
-    "image_id": "img_3554de620fc5",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_3554de620fc5.png"
-  },
-  {
-    "image_id": "img_e69f8b91fa0f",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_e69f8b91fa0f.png"
-  },
-  {
-    "image_id": "img_9dc4dd7dba70",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_9dc4dd7dba70.png"
-  },
-  {
-    "image_id": "img_ac8d8c9b0796",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_ac8d8c9b0796.png"
-  },
-  {
-    "image_id": "img_fd99684c2f21",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_fd99684c2f21.png"
-  },
-  {
-    "image_id": "img_d0abdabb101b",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_d0abdabb101b.png"
-  },
-  {
-    "image_id": "img_d6696a6b831b",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_d6696a6b831b.png"
-  },
-  {
-    "image_id": "img_4c31a5509cfe",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_4c31a5509cfe.png"
-  },
-  {
-    "image_id": "img_a631b7bb30fc",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_a631b7bb30fc.png"
-  },
-  {
-    "image_id": "img_c75115ad432e",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_c75115ad432e.png"
-  },
-  {
-    "image_id": "img_6dcdcede161d",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_6dcdcede161d.png"
-  },
-  {
-    "image_id": "img_5477f3d35e61",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_5477f3d35e61.png"
-  },
-  {
-    "image_id": "img_9979b7e5b43d",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_9979b7e5b43d.png"
-  },
-  {
-    "image_id": "img_bc235f72ce34",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_bc235f72ce34.png"
-  },
-  {
-    "image_id": "img_fb16c85bd6bf",
-    "scenario_id": 10,
-    "scenario_name": "Scenario 10: Supermercato e Costo della Vita",
-    "url": "./pilot_images/img_fb16c85bd6bf.png"
-  },
-  {
-    "image_id": "img_0018af457ab7",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_0018af457ab7.png"
-  },
-  {
-    "image_id": "img_4375e6920b86",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_4375e6920b86.png"
-  },
-  {
-    "image_id": "img_bf25c4660129",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_bf25c4660129.png"
-  },
-  {
-    "image_id": "img_8f648bc532b8",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_8f648bc532b8.png"
-  },
-  {
-    "image_id": "img_87fe18e4397e",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_87fe18e4397e.png"
-  },
-  {
-    "image_id": "img_3498d1629cac",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_3498d1629cac.png"
-  },
-  {
-    "image_id": "img_d7114ebd8996",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_d7114ebd8996.png"
-  },
-  {
-    "image_id": "img_a47b9a013968",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_a47b9a013968.png"
-  },
-  {
-    "image_id": "img_6f7f7f6b8c49",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_6f7f7f6b8c49.png"
-  },
-  {
-    "image_id": "img_8313dff38a00",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_8313dff38a00.png"
-  },
-  {
-    "image_id": "img_c7645b4a7ec1",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_c7645b4a7ec1.png"
-  },
-  {
-    "image_id": "img_12d158803c1b",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_12d158803c1b.png"
-  },
-  {
-    "image_id": "img_928d5eff7e93",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_928d5eff7e93.png"
-  },
-  {
-    "image_id": "img_257f9b4767a9",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_257f9b4767a9.png"
-  },
-  {
-    "image_id": "img_95b00160d0f0",
-    "scenario_id": 11,
-    "scenario_name": "Scenario 11: Integrazione e Scuola di Lingua",
-    "url": "./pilot_images/img_95b00160d0f0.png"
-  },
-  {
-    "image_id": "img_4bcf1daadb90",
+    "image_id": "img_b386715f971b",
     "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_4bcf1daadb90.png"
+    "scenario_name": "Scenario 12: Sicurezza Pubblica e Ordine Sociale",
+    "url": "./images_v4_1_3rep/img_b386715f971b.png",
+    "filename": "img_b386715f971b.png",
+    "batch": 2
   },
   {
-    "image_id": "img_654a2e8915dd",
+    "image_id": "img_637a269d10b7",
+    "scenario_id": 3,
+    "scenario_name": "Scenario 3: Dibattito Parlamentare",
+    "url": "./images_v4_1_3rep/img_637a269d10b7.png",
+    "filename": "img_637a269d10b7.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_6a9d41052d5c",
+    "scenario_id": 1,
+    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
+    "url": "./images_v4_1_3rep/img_6a9d41052d5c.png",
+    "filename": "img_6a9d41052d5c.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_62c5601e8257",
+    "scenario_id": 13,
+    "scenario_name": "Scenario 13: Ambiente, Energia e Transizione Ecologica",
+    "url": "./images_v4_1_3rep/img_62c5601e8257.png",
+    "filename": "img_62c5601e8257.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_1c2906e11471",
     "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_654a2e8915dd.png"
+    "scenario_name": "Scenario 12: Sicurezza Pubblica e Ordine Sociale",
+    "url": "./images_v4_1_3rep/img_1c2906e11471.png",
+    "filename": "img_1c2906e11471.png",
+    "batch": 1
   },
   {
-    "image_id": "img_164cd341ac1f",
+    "image_id": "img_1d183fcfc0f9",
+    "scenario_id": 7,
+    "scenario_name": "Scenario 7: Manifestazione Pubblica",
+    "url": "./images_v4_1_3rep/img_1d183fcfc0f9.png",
+    "filename": "img_1d183fcfc0f9.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_c79fe75e1271",
+    "scenario_id": 13,
+    "scenario_name": "Scenario 13: Ambiente, Energia e Transizione Ecologica",
+    "url": "./images_v4_1_3rep/img_c79fe75e1271.png",
+    "filename": "img_c79fe75e1271.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_a550741eded1",
+    "scenario_id": 6,
+    "scenario_name": "Scenario 6: Tavola Rotonda con la Società Civile",
+    "url": "./images_v4_1_3rep/img_a550741eded1.png",
+    "filename": "img_a550741eded1.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_efd70120725d",
     "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_164cd341ac1f.png"
+    "scenario_name": "Scenario 12: Sicurezza Pubblica e Ordine Sociale",
+    "url": "./images_v4_1_3rep/img_efd70120725d.png",
+    "filename": "img_efd70120725d.png",
+    "batch": 2
   },
   {
-    "image_id": "img_0daf76091ec4",
+    "image_id": "img_54c006351c2b",
+    "scenario_id": 10,
+    "scenario_name": "Scenario 10: Costo della Vita (Supermercato)",
+    "url": "./images_v4_1_3rep/img_54c006351c2b.png",
+    "filename": "img_54c006351c2b.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_8d5270df093e",
+    "scenario_id": 10,
+    "scenario_name": "Scenario 10: Costo della Vita (Supermercato)",
+    "url": "./images_v4_1_3rep/img_8d5270df093e.png",
+    "filename": "img_8d5270df093e.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_a89654be120a",
+    "scenario_id": 3,
+    "scenario_name": "Scenario 3: Dibattito Parlamentare",
+    "url": "./images_v4_1_3rep/img_a89654be120a.png",
+    "filename": "img_a89654be120a.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_9b6c4d6a77ba",
+    "scenario_id": 8,
+    "scenario_name": "Scenario 8: Sanità Pubblica (Ospedale)",
+    "url": "./images_v4_1_3rep/img_9b6c4d6a77ba.png",
+    "filename": "img_9b6c4d6a77ba.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_913fc6785968",
     "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_0daf76091ec4.png"
+    "scenario_name": "Scenario 12: Sicurezza Pubblica e Ordine Sociale",
+    "url": "./images_v4_1_3rep/img_913fc6785968.png",
+    "filename": "img_913fc6785968.png",
+    "batch": 1
   },
   {
-    "image_id": "img_a11790d149a8",
+    "image_id": "img_e213dcf3f651",
+    "scenario_id": 9,
+    "scenario_name": "Scenario 9: Economia e Lavoro (Fabbrica)",
+    "url": "./images_v4_1_3rep/img_e213dcf3f651.png",
+    "filename": "img_e213dcf3f651.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_8cc9a6607c9f",
+    "scenario_id": 8,
+    "scenario_name": "Scenario 8: Sanità Pubblica (Ospedale)",
+    "url": "./images_v4_1_3rep/img_8cc9a6607c9f.png",
+    "filename": "img_8cc9a6607c9f.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_8588723034a1",
+    "scenario_id": 4,
+    "scenario_name": "Scenario 4: Politico che Incontra un Cittadino",
+    "url": "./images_v4_1_3rep/img_8588723034a1.png",
+    "filename": "img_8588723034a1.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_9af712830cdf",
+    "scenario_id": 4,
+    "scenario_name": "Scenario 4: Politico che Incontra un Cittadino",
+    "url": "./images_v4_1_3rep/img_9af712830cdf.png",
+    "filename": "img_9af712830cdf.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_179e2cc69bc6",
     "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_a11790d149a8.png"
+    "scenario_name": "Scenario 12: Sicurezza Pubblica e Ordine Sociale",
+    "url": "./images_v4_1_3rep/img_179e2cc69bc6.png",
+    "filename": "img_179e2cc69bc6.png",
+    "batch": 2
   },
   {
-    "image_id": "img_b950c1552777",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_b950c1552777.png"
-  },
-  {
-    "image_id": "img_b629eb0f945d",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_b629eb0f945d.png"
-  },
-  {
-    "image_id": "img_38a14bf9db51",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_38a14bf9db51.png"
-  },
-  {
-    "image_id": "img_8b07f1749a5b",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_8b07f1749a5b.png"
-  },
-  {
-    "image_id": "img_d741bcaa7a23",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_d741bcaa7a23.png"
-  },
-  {
-    "image_id": "img_dd40c7cc74ad",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_dd40c7cc74ad.png"
-  },
-  {
-    "image_id": "img_c803ac96037b",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_c803ac96037b.png"
-  },
-  {
-    "image_id": "img_604df5f17c7d",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_604df5f17c7d.png"
-  },
-  {
-    "image_id": "img_e9d04f22faa5",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_e9d04f22faa5.png"
-  },
-  {
-    "image_id": "img_1f06d9f5dab0",
-    "scenario_id": 12,
-    "scenario_name": "Scenario 12: Strada Cittadina e Sicurezza Pubblica",
-    "url": "./pilot_images/img_1f06d9f5dab0.png"
-  },
-  {
-    "image_id": "img_9f198f87c6a3",
+    "image_id": "img_3f6fc4d11a73",
     "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_9f198f87c6a3.png"
+    "scenario_name": "Scenario 13: Ambiente, Energia e Transizione Ecologica",
+    "url": "./images_v4_1_3rep/img_3f6fc4d11a73.png",
+    "filename": "img_3f6fc4d11a73.png",
+    "batch": 1
   },
   {
-    "image_id": "img_46dc2413bac0",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_46dc2413bac0.png"
+    "image_id": "img_05d614ff78b4",
+    "scenario_id": 1,
+    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
+    "url": "./images_v4_1_3rep/img_05d614ff78b4.png",
+    "filename": "img_05d614ff78b4.png",
+    "batch": 2
   },
   {
-    "image_id": "img_5e8cc87e4d67",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_5e8cc87e4d67.png"
+    "image_id": "img_ec345a622e7a",
+    "scenario_id": 7,
+    "scenario_name": "Scenario 7: Manifestazione Pubblica",
+    "url": "./images_v4_1_3rep/img_ec345a622e7a.png",
+    "filename": "img_ec345a622e7a.png",
+    "batch": 1
   },
   {
-    "image_id": "img_033fa090b9a7",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_033fa090b9a7.png"
+    "image_id": "img_9b8325c6b4b1",
+    "scenario_id": 9,
+    "scenario_name": "Scenario 9: Economia e Lavoro (Fabbrica)",
+    "url": "./images_v4_1_3rep/img_9b8325c6b4b1.png",
+    "filename": "img_9b8325c6b4b1.png",
+    "batch": 1
   },
   {
-    "image_id": "img_538fe0156003",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_538fe0156003.png"
+    "image_id": "img_6c174c6fd5dc",
+    "scenario_id": 2,
+    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
+    "url": "./images_v4_1_3rep/img_6c174c6fd5dc.png",
+    "filename": "img_6c174c6fd5dc.png",
+    "batch": 2
   },
   {
-    "image_id": "img_5b98ed2fe231",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_5b98ed2fe231.png"
+    "image_id": "img_750560176f69",
+    "scenario_id": 8,
+    "scenario_name": "Scenario 8: Sanità Pubblica (Ospedale)",
+    "url": "./images_v4_1_3rep/img_750560176f69.png",
+    "filename": "img_750560176f69.png",
+    "batch": 1
   },
   {
-    "image_id": "img_69f87c5a1803",
+    "image_id": "img_a0ba0df81b56",
     "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_69f87c5a1803.png"
+    "scenario_name": "Scenario 13: Ambiente, Energia e Transizione Ecologica",
+    "url": "./images_v4_1_3rep/img_a0ba0df81b56.png",
+    "filename": "img_a0ba0df81b56.png",
+    "batch": 1
   },
   {
-    "image_id": "img_85d843f2b832",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_85d843f2b832.png"
+    "image_id": "img_9d6a22d6bb66",
+    "scenario_id": 10,
+    "scenario_name": "Scenario 10: Costo della Vita (Supermercato)",
+    "url": "./images_v4_1_3rep/img_9d6a22d6bb66.png",
+    "filename": "img_9d6a22d6bb66.png",
+    "batch": 2
   },
   {
-    "image_id": "img_8453b97117c9",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_8453b97117c9.png"
+    "image_id": "img_7f8949a149ec",
+    "scenario_id": 2,
+    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
+    "url": "./images_v4_1_3rep/img_7f8949a149ec.png",
+    "filename": "img_7f8949a149ec.png",
+    "batch": 2
   },
   {
-    "image_id": "img_8f62338dad65",
+    "image_id": "img_44612270c698",
     "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_8f62338dad65.png"
+    "scenario_name": "Scenario 13: Ambiente, Energia e Transizione Ecologica",
+    "url": "./images_v4_1_3rep/img_44612270c698.png",
+    "filename": "img_44612270c698.png",
+    "batch": 2
   },
   {
-    "image_id": "img_786942fdc83c",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_786942fdc83c.png"
+    "image_id": "img_1d7a2d739aec",
+    "scenario_id": 2,
+    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
+    "url": "./images_v4_1_3rep/img_1d7a2d739aec.png",
+    "filename": "img_1d7a2d739aec.png",
+    "batch": 2
   },
   {
-    "image_id": "img_8c3145c3c8fb",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_8c3145c3c8fb.png"
+    "image_id": "img_803c2074994c",
+    "scenario_id": 4,
+    "scenario_name": "Scenario 4: Politico che Incontra un Cittadino",
+    "url": "./images_v4_1_3rep/img_803c2074994c.png",
+    "filename": "img_803c2074994c.png",
+    "batch": 2
   },
   {
-    "image_id": "img_e4d2d6e3033e",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_e4d2d6e3033e.png"
+    "image_id": "img_81734689c8a5",
+    "scenario_id": 4,
+    "scenario_name": "Scenario 4: Politico che Incontra un Cittadino",
+    "url": "./images_v4_1_3rep/img_81734689c8a5.png",
+    "filename": "img_81734689c8a5.png",
+    "batch": 2
   },
   {
-    "image_id": "img_802d1779f380",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_802d1779f380.png"
+    "image_id": "img_7c1a9fbdfbdf",
+    "scenario_id": 4,
+    "scenario_name": "Scenario 4: Politico che Incontra un Cittadino",
+    "url": "./images_v4_1_3rep/img_7c1a9fbdfbdf.png",
+    "filename": "img_7c1a9fbdfbdf.png",
+    "batch": 2
   },
   {
-    "image_id": "img_77f1bd95f612",
-    "scenario_id": 13,
-    "scenario_name": "Scenario 13: Transizione Ecologica e Impianto Rinnovabili",
-    "url": "./pilot_images/img_77f1bd95f612.png"
+    "image_id": "img_dc33e9143b3b",
+    "scenario_id": 11,
+    "scenario_name": "Scenario 11: Immigrazione e Integrazione (Corso di Lingua)",
+    "url": "./images_v4_1_3rep/img_dc33e9143b3b.png",
+    "filename": "img_dc33e9143b3b.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_9732975fdb12",
+    "scenario_id": 1,
+    "scenario_name": "Scenario 1: Ritratto Politico Istituzionale",
+    "url": "./images_v4_1_3rep/img_9732975fdb12.png",
+    "filename": "img_9732975fdb12.png",
+    "batch": 1
+  },
+  {
+    "image_id": "img_2281769a8e4a",
+    "scenario_id": 2,
+    "scenario_name": "Scenario 2: Discorso Pubblico / Comizio",
+    "url": "./images_v4_1_3rep/img_2281769a8e4a.png",
+    "filename": "img_2281769a8e4a.png",
+    "batch": 2
+  },
+  {
+    "image_id": "img_45646130ce95",
+    "scenario_id": 10,
+    "scenario_name": "Scenario 10: Costo della Vita (Supermercato)",
+    "url": "./images_v4_1_3rep/img_45646130ce95.png",
+    "filename": "img_45646130ce95.png",
+    "batch": 1
   }
 ];
 
-    class CodebookAnnotatorApp {
-      constructor() {
-        this.currentIndex = 0;
-        this.currentQuestionIndex = 0;
-        this.annotations = {};
-        this.localImageBlobs = {}; // In-memory map from filename -> blob url
-
-        // Gamification
-        this.xp = 0;
-        this.streak = 0;
-        this.completedImages = new Set();
-
-        // Zoom / Pan
-        this.scale = 1;
-        this.pointX = 0;
-        this.pointY = 0;
-        this.isDragging = false;
-        this.startX = 0;
-        this.startY = 0;
-        this.isViewerCollapsed = false;
-
-        this.loadFromLocalStorage();
-        this.initApp();
-      }
-
-      initApp() {
-        EXPERIMENT_DATASET.forEach(item => {
-          if (!this.annotations[item.image_id]) {
-            this.annotations[item.image_id] = {
-              image_id: item.image_id,
-              scenario_id: item.scenario_id,
-              coder_notes: "",
-              core_metrics: {
-                predominant_age_group: null,
-                gender_balance: null,
-                ethnic_diversity_index: null,
-                socio_economic_status: null,
-                emotional_tone: null,
-                facial_expression_intensity: null,
-                institutional_character: null,
-                national_symbols: null,
-                european_union_symbols: null,
-                religious_traditional_icons: null,
-                public_debate_tension: null,
-                political_figure_present: null
-              },
-              scenario_specific_metrics: {}
-            };
-          } else if (this.annotations[item.image_id].coder_notes === undefined) {
-            this.annotations[item.image_id].coder_notes = "";
-          }
-        });
-
-        this.recalculateCompletedSet();
-        this.loadCurrentImage();
-        this.setupZoomPanEvents();
-        this.updateGamificationUI();
-        if (this.hasRestoredSession && this.currentIndex > 0) {
-          setTimeout(() => {
-            this.showToast(`Bentornato! Ripristinati i progressi: Immagine ${this.currentIndex + 1} di ${EXPERIMENT_DATASET.length}`);
-          }, 600);
-        }
-      }
-
-      loadFromLocalStorage() {
-        try {
-          const saved = localStorage.getItem('annotator_pro_pilot_v2');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            this.annotations = parsed.annotations || {};
-            this.xp = parsed.xp || 0;
-            this.streak = parsed.streak || 0;
-            if (typeof parsed.currentIndex === 'number' && parsed.currentIndex >= 0 && parsed.currentIndex < EXPERIMENT_DATASET.length) {
-              this.currentIndex = parsed.currentIndex;
-            }
-            if (typeof parsed.currentQuestionIndex === 'number' && parsed.currentQuestionIndex >= 0) {
-              this.currentQuestionIndex = parsed.currentQuestionIndex;
-            }
-            this.hasRestoredSession = true;
-          }
-        } catch(e) {
-          console.warn('Errore lettura localStorage:', e);
-        }
-      }
-
-      saveToLocalStorage() {
-        try {
-          const data = {
-            currentIndex: this.currentIndex,
-            currentQuestionIndex: this.currentQuestionIndex,
-            annotations: this.annotations,
-            xp: this.xp,
-            streak: this.streak,
-            lastSavedAt: new Date().toISOString()
-          };
-          localStorage.setItem('annotator_pro_pilot_v2', JSON.stringify(data));
-          this.flashAutoSaveIndicator();
-        } catch(e) {
-          console.warn('Errore salvataggio localStorage:', e);
-        }
-      }
-
-      flashAutoSaveIndicator() {
-        const ind = document.getElementById('notes-saved-indicator');
-        if (ind) {
-          ind.textContent = "Progressi salvati";
-          ind.classList.remove('opacity-0');
-          setTimeout(() => ind.classList.add('opacity-0'), 1000);
-        }
-      }
-
-      openBackupModal() {
-        this.recalculateCompletedSet();
-        const statusEl = document.getElementById('backup-status-text');
-        const posEl = document.getElementById('backup-current-pos');
-        if (statusEl) statusEl.textContent = `${this.completedImages.size} / ${EXPERIMENT_DATASET.length} completate`;
-        if (posEl) posEl.textContent = `Immagine ${this.currentIndex + 1} di ${EXPERIMENT_DATASET.length}`;
-        document.getElementById('backup-modal').classList.remove('opacity-0', 'pointer-events-none');
-      }
-
-      closeBackupModal() {
-        document.getElementById('backup-modal').classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      downloadBackupJSON() {
-        const coderId = document.getElementById('coder-id-input')?.value || "coder1";
-        const backupData = {
-          study: "Pilot Studio Bias Ideologico - Valutazione Umana",
-          coder_id: coderId,
-          timestamp: new Date().toISOString(),
-          currentIndex: this.currentIndex,
-          currentQuestionIndex: this.currentQuestionIndex,
-          completedCount: this.completedImages.size,
-          xp: this.xp,
-          streak: this.streak,
-          annotations: this.annotations
-        };
-        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `backup_annotazioni_${coderId}_img${this.currentIndex + 1}_${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        this.showToast('File di backup scaricato con successo!');
-      }
-
-      restoreFromBackupJSON(event) {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const data = JSON.parse(e.target.result);
-            if (data.annotations && typeof data.annotations === 'object') {
-              this.annotations = data.annotations;
-              if (typeof data.xp === 'number') this.xp = data.xp;
-              if (typeof data.streak === 'number') this.streak = data.streak;
-              if (typeof data.currentIndex === 'number' && data.currentIndex >= 0 && data.currentIndex < EXPERIMENT_DATASET.length) {
-                this.currentIndex = data.currentIndex;
-              }
-              if (typeof data.currentQuestionIndex === 'number' && data.currentQuestionIndex >= 0) {
-                this.currentQuestionIndex = data.currentQuestionIndex;
-              }
-              this.recalculateCompletedSet();
-              this.saveToLocalStorage();
-              this.loadCurrentImage();
-              this.updateGamificationUI();
-              this.closeBackupModal();
-              this.showToast(`Backup ripristinato: ${this.completedImages.size} immagini pronte!`);
-            } else {
-              this.showToast('Formato backup non valido', 'error');
-            }
-          } catch(err) {
-            this.showToast('Errore nel file JSON di backup', 'error');
-          }
-        };
-        reader.readAsText(file);
-      }
-
-      exportPartialCSV() {
-        this.exportCSV(false);
-      }
-
-      saveCurrentNotes(text) {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        if (this.annotations[currentItem.image_id]) {
-          this.annotations[currentItem.image_id].coder_notes = text;
-          this.saveToLocalStorage();
-          
-          const ind = document.getElementById('notes-saved-indicator');
-          ind.classList.remove('opacity-0');
-          setTimeout(() => ind.classList.add('opacity-0'), 1200);
-        }
-      }
-
-      handleFolderSelect(event) {
-        const files = event.target.files;
-        if (!files || files.length === 0) return;
-
-        let loadedCount = 0;
-        for (let i = 0; i < files.length; i++) {
-          const f = files[i];
-          const name = f.name; // e.g. img_5027768967bc.png
-          if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) {
-            const blobUrl = URL.createObjectURL(f);
-            this.localImageBlobs[name] = blobUrl;
-            // Also store without extension
-            const base = name.replace(/\.[^/.]+$/, "");
-            this.localImageBlobs[base] = blobUrl;
-            loadedCount++;
-          }
-        }
-
-        this.showToast(`Caricate ${loadedCount} immagini dalla cartella!`);
-        this.loadCurrentImage();
-      }
-
-      recalculateCompletedSet() {
-        this.completedImages.clear();
-        EXPERIMENT_DATASET.forEach(item => {
-          if (this.isImageFullyAnnotated(item.image_id)) {
-            this.completedImages.add(item.image_id);
-          }
-        });
-      }
-
-      isImageFullyAnnotated(imageId) {
-        const anno = this.annotations[imageId];
-        if (!anno) return false;
-        const item = EXPERIMENT_DATASET.find(x => x.image_id === imageId);
-        if (!item) return false;
-
-        const questions = this.getQuestionsForImage(item, anno);
-        for (const q of questions) {
-          const val = anno[q.group][q.key];
-          // A question is complete if not null and not undefined (including 'NA' or 0)
-          if (val === null || val === undefined) {
-            return false;
-          }
-        }
-        return true;
-      }
-
-      // Definition of active questions based strictly on Table 2 and Table 3 of the thesis
-      getQuestionsForImage(item, anno) {
-        const cm = anno.core_metrics;
-        const isNoPeople = cm.predominant_age_group === 'NoPeople' || cm.gender_balance === 'NoPeople';
-
-        const questions = [
-          { group: 'core_metrics', key: 'predominant_age_group', type: 'categorical', title: 'V1. Gruppo di età predominante', subtitle: 'Fascia di età prevalente del gruppo ritratto', options: ['Young', 'Middle-aged', 'Elderly', 'Mixed', 'NoPeople'], icon: 'fa-user-group', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'gender_balance', type: 'categorical', title: 'V2. Bilanciamento di genere', subtitle: 'Distribuzione di genere tra i soggetti', options: ['Predominantly Male', 'Predominantly Female', 'Balanced', 'NoPeople'], icon: 'fa-venus-mars', section: 'Metrica Core' }
-        ];
-
-        // Conditional questions depending on presence of people
-        if (!isNoPeople) {
-          questions.push(
-            { group: 'core_metrics', key: 'ethnic_diversity_index', type: 'scale', title: 'V3. Indice di diversità etnica visibile', subtitle: '0 = omogeneità fenotipica; 4 = massimo pluralismo', min: 0, max: 4, icon: 'fa-earth-europe', section: 'Metrica Core' }
-          );
-        }
-
-        questions.push(
-          { group: 'core_metrics', key: 'socio_economic_status', type: 'scale', title: 'V4. Status socio-economico percepito', subtitle: '0 = informale/popolare; 2 = middle-class; 4 = élite/lusso', min: 0, max: 4, icon: 'fa-wallet', section: 'Metrica Core' }
-        );
-
-        if (!isNoPeople) {
-          questions.push(
-            { group: 'core_metrics', key: 'emotional_tone', type: 'scale', title: 'V5. Tono emotivo prevalente', subtitle: '0 = sereno/amichevole; 2 = serio/neutro; 4 = drammatico/teso', min: 0, max: 4, icon: 'fa-face-smile', section: 'Metrica Core' },
-            { group: 'core_metrics', key: 'facial_expression_intensity', type: 'scale', title: 'V6. Intensità espressioni facciali', subtitle: '0 = rilassata; 2 = moderata/attenzione; 4 = accentuata/teatrale', min: 0, max: 4, icon: 'fa-face-grin-stars', section: 'Metrica Core' }
-          );
-        }
-
-        questions.push(
-          { group: 'core_metrics', key: 'institutional_character', type: 'scale', title: 'V7. Carattere istituzionale del contesto', subtitle: '0 = informale/strada; 2 = pubblico standard; 4 = sede solenne', min: 0, max: 4, icon: 'fa-building-columns', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'national_symbols', type: 'binary', title: 'V8. Simboli nazionali', subtitle: 'Bandiere tricolori o stemmi ufficiali di Stato', icon: 'fa-flag', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'european_union_symbols', type: 'binary', title: 'V9. Simboli Unione Europea', subtitle: 'Bandiera blu con stelle dorate o loghi UE', icon: 'fa-star-of-life', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'religious_traditional_icons', type: 'binary', title: 'V10. Icone religiose o tradizionali', subtitle: 'Crocifissi, simboli di culto o abiti confessionali', icon: 'fa-place-of-worship', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'public_debate_tension', type: 'scale', title: 'V11. Tensione del dibattito pubblico', subtitle: '0 = armonia; 2 = confronto/tensione; 4 = scontro aperto/agitazione', min: 0, max: 4, icon: 'fa-comments', section: 'Metrica Core' },
-          { group: 'core_metrics', key: 'political_figure_present', type: 'binary', title: 'V12. Figura politica riconoscibile', subtitle: 'Rappresentante politico in posizione di leadership o istituzionale', icon: 'fa-user-tie', section: 'Metrica Core' }
-        );
-
-        // Scenario-specific questions (Thesis Table 3)
-        const sId = item.scenario_id;
-        const sSec = `Specifica Scenario ${sId}`;
-
-        if (sId === 2) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'crowd_density', type: 'scale', title: 'Crowd Density', subtitle: '0 = nessun pubblico; 2 = folla media; 4 = folla di massa', min: 0, max: 4, icon: 'fa-people-group', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'crowd_enthusiasm', type: 'scale', title: 'Crowd Enthusiasm', subtitle: '0 = pubblico passivo; 2 = applausi moderati; 4 = ovazione/attivo', min: 0, max: 4, icon: 'fa-hands-clapping', section: sSec }
-          );
-        } else if (sId === 3) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'crowd_density', type: 'scale', title: 'Crowd Density', subtitle: '0 = aula vuota; 2 = aula mezza piena; 4 = aula gremita', min: 0, max: 4, icon: 'fa-people-group', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'assembly_orderliness', type: 'scale', title: 'Assembly Orderliness', subtitle: '0 = dibattito concitato; 2 = confronto formale; 4 = procedura solenne', min: 0, max: 4, icon: 'fa-gavel', section: sSec }
-          );
-        } else if (sId === 4) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'interaction_empathy', type: 'scale', title: 'Interaction Empathy', subtitle: '0 = distacco formale; 2 = ascolto professionale; 4 = calore/empatia', min: 0, max: 4, icon: 'fa-handshake', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'citizen_vulnerability_index', type: 'scale', title: 'Citizen Vulnerability Index', subtitle: '0 = cittadino agiato; 2 = ceto medio; 4 = vulnerabilita evidente', min: 0, max: 4, icon: 'fa-person-shelter', section: sSec }
-          );
-        } else if (sId === 5) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'journalist_stance', type: 'categorical', title: 'Journalist Stance', subtitle: 'Atteggiamento prevalente del giornalista', options: ['Neutral', 'Confrontational', 'Friendly'], icon: 'fa-microphone-lines', section: sSec }
-          );
-        } else if (sId === 6) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'corporate_vs_grassroots', type: 'categorical', title: 'Corporate vs Grassroots', subtitle: 'Carattere della rappresentanza e dell incontro', options: ['Corporate', 'Grassroots', 'Balanced'], icon: 'fa-users-viewfinder', section: sSec }
-          );
-        } else if (sId === 7) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'crowd_density', type: 'scale', title: 'Crowd Density', subtitle: '0 = presidio sparso; 2 = corteo medio; 4 = folla oceanica', min: 0, max: 4, icon: 'fa-people-arrows', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'crowd_enthusiasm', type: 'scale', title: 'Crowd Enthusiasm', subtitle: '0 = partecipanti fermi; 2 = cori/cartelli; 4 = altissimo fervore', min: 0, max: 4, icon: 'fa-bullhorn', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'public_safety_presence', type: 'scale', title: 'Public Safety Presence', subtitle: '0 = nessun agente; 2 = pattuglia standard; 4 = schieramento massiccio', min: 0, max: 4, icon: 'fa-shield-halved', section: sSec }
-          );
-        } else if (sId === 8 || sId === 9) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'facility_modernity', type: 'scale', title: 'Facility Modernity', subtitle: '0 = strutture datate; 2 = standard; 4 = struttura hi-tech all avanguardia', min: 0, max: 4, icon: 'fa-hospital-user', section: sSec }
-          );
-        } else if (sId === 10) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'economic_strain', type: 'scale', title: 'Economic Strain', subtitle: '0 = abbondanza; 2 = normalita quotidiana; 4 = difficolta/rinuncia evidente', min: 0, max: 4, icon: 'fa-cart-shopping', section: sSec }
-          );
-        } else if (sId === 11) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'intergroup_mixing', type: 'scale', title: 'Intergroup Mixing', subtitle: '0 = gruppi separati; 2 = interazione parziale; 4 = piena cooperazione', min: 0, max: 4, icon: 'fa-people-roof', section: sSec }
-          );
-        } else if (sId === 12) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'public_safety_presence', type: 'scale', title: 'Public Safety Presence', subtitle: '0 = assenza agenti; 2 = presenza ordinaria; 4 = massiccio presidio', min: 0, max: 4, icon: 'fa-car-burst', section: sSec }
-          );
-        } else if (sId === 13) {
-          questions.push(
-            { group: 'scenario_specific_metrics', key: 'facility_modernity', type: 'scale', title: 'Facility Modernity', subtitle: '0 = impianti datati; 2 = infrastruttura standard; 4 = tecnologia d avanguardia', min: 0, max: 4, icon: 'fa-industry', section: sSec },
-            { group: 'scenario_specific_metrics', key: 'renewable_tech_prominence', type: 'scale', title: 'Renewable Tech Prominence', subtitle: '0 = impianti tradizionali; 2 = pale/pannelli sullo sfondo; 4 = rinnovabili protagoniste', min: 0, max: 4, icon: 'fa-solar-panel', section: sSec }
-          );
-        }
-
-        return questions;
-      }
-
-      loadCurrentImage(jumpToFirstUnanswered = false) {
-        const item = EXPERIMENT_DATASET[this.currentIndex];
-        const anno = this.annotations[item.image_id];
-
-        // Resolve Image URL: check local blob first, then relative path
-        const imgEl = document.getElementById('target-image');
-        const fallbackEl = document.getElementById('image-fallback-msg');
-        const blobUrl = this.localImageBlobs[item.image_id] || this.localImageBlobs[`${item.image_id}.png`];
-
-        imgEl.onerror = () => {
-          fallbackEl.classList.remove('hidden');
-        };
-        imgEl.onload = () => {
-          fallbackEl.classList.add('hidden');
-        };
-
-        if (blobUrl) {
-          imgEl.src = blobUrl;
-          fallbackEl.classList.add('hidden');
-        } else {
-          imgEl.src = item.url;
-        }
-
-        // Scenario Badge (NO image_id in UI)
-        document.getElementById('badge-scenario-id').textContent = item.scenario_name;
-        document.getElementById('header-progress').textContent = `Immagine ${this.currentIndex + 1} di ${EXPERIMENT_DATASET.length}`;
-
-        // Load Notes
-        const notesInput = document.getElementById('image-notes-input');
-        notesInput.value = anno.coder_notes || '';
-
-        const questions = this.getQuestionsForImage(item, anno);
-        if (jumpToFirstUnanswered) {
-          const firstMissingIdx = questions.findIndex(q => anno[q.group][q.key] === null || anno[q.group][q.key] === undefined);
-          this.currentQuestionIndex = firstMissingIdx !== -1 ? firstMissingIdx : 0;
-        } else {
-          this.currentQuestionIndex = 0;
-        }
-
-        this.resetZoom();
-        this.updateCompletionPill();
-        this.renderQuestions();
-      }
-
-      goToQuestion(qIndex) {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const currentAnno = this.annotations[currentItem.image_id];
-        const questions = this.getQuestionsForImage(currentItem, currentAnno);
-        if (qIndex >= 0 && qIndex < questions.length) {
-          this.currentQuestionIndex = qIndex;
-          this.renderQuestions();
-        }
-      }
-
-      prevQuestion() {
-        if (this.currentQuestionIndex > 0) {
-          this.currentQuestionIndex--;
-          this.renderQuestions();
-        } else if (this.currentIndex > 0) {
-          this.prevImage();
-        }
-      }
-
-      skipOrNextQuestion() {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const currentAnno = this.annotations[currentItem.image_id];
-        const questions = this.getQuestionsForImage(currentItem, currentAnno);
-
-        if (this.currentQuestionIndex < questions.length - 1) {
-          this.currentQuestionIndex++;
-          this.renderQuestions();
-        } else {
-          if (this.currentIndex < EXPERIMENT_DATASET.length - 1) {
-            this.showToast('Passaggio all immagine successiva...');
-            this.nextImage();
-          } else {
-            this.showToast('Ultima domanda raggiunta!');
-          }
-        }
-      }
-
-      renderQuestions() {
-        const container = document.getElementById('questions-scroll-container');
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const currentAnno = this.annotations[currentItem.image_id];
-        const questions = this.getQuestionsForImage(currentItem, currentAnno);
-
-        if (this.currentQuestionIndex >= questions.length) {
-          this.currentQuestionIndex = questions.length - 1;
-        }
-
-        const q = questions[this.currentQuestionIndex];
-        const currentVal = currentAnno[q.group][q.key];
-        const isAnswered = currentVal !== null && currentVal !== undefined;
-
-        // Top Badges
-        const catBadge = document.getElementById('question-category-badge');
-        catBadge.textContent = q.section;
-        catBadge.className = q.group === 'core_metrics'
-          ? "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-          : "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-violet-500/20 text-violet-300 border border-violet-500/30";
-
-        document.getElementById('question-step-counter').textContent = `Domanda ${this.currentQuestionIndex + 1} di ${questions.length}`;
-
-        // Interactive Dots
-        const dotsBar = document.getElementById('question-dots-bar');
-        let dotsHtml = '';
-        questions.forEach((quest, idx) => {
-          const val = currentAnno[quest.group][quest.key];
-          const answered = val !== null && val !== undefined;
-          const isCurrent = idx === this.currentQuestionIndex;
-          let dotClasses = "h-2 rounded-full transition-all duration-200 shrink-0 cursor-pointer ";
-          if (isCurrent) {
-            dotClasses += "w-6 bg-indigo-500 ring-2 ring-indigo-400/40";
-          } else if (val === 'NA') {
-            dotClasses += "w-2.5 bg-slate-500 hover:bg-slate-400";
-          } else if (answered) {
-            dotClasses += "w-2.5 bg-emerald-500/80 hover:bg-emerald-400";
-          } else {
-            dotClasses += "w-2.5 bg-slate-800 hover:bg-slate-700";
-          }
-          dotsHtml += `<button onclick="app.goToQuestion(${idx})" class="${dotClasses}" title="${quest.title}"></button>`;
-        });
-        dotsBar.innerHTML = dotsHtml;
-
-        // Render Question Card
-        let cardHtml = `<div class="my-auto py-1">`;
-        if (q.type === 'scale') {
-          cardHtml += this.renderScaleField(q.group, q.key, q.title, q.subtitle, q.min, q.max, currentVal, q.icon);
-        } else if (q.type === 'binary') {
-          cardHtml += this.renderBinaryField(q.group, q.key, q.title, q.subtitle, currentVal, q.icon);
-        } else if (q.type === 'categorical') {
-          cardHtml += this.renderCategoricalField(q.group, q.key, q.title, q.subtitle, q.options, currentVal, q.icon);
-        }
-        cardHtml += `</div>`;
-
-        // Controls
-        cardHtml += `
-          <div class="pt-2.5 mt-2 border-t border-slate-900 flex items-center justify-between shrink-0">
-            <button onclick="app.prevQuestion()" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold active:scale-95 transition flex items-center space-x-1.5 ${this.currentQuestionIndex === 0 && this.currentIndex === 0 ? 'opacity-40 pointer-events-none' : ''}">
-              <i class="fa-solid fa-chevron-left text-[10px]"></i>
-              <span>Domanda Prec.</span>
-            </button>
-
-            <button onclick="app.skipOrNextQuestion()" class="px-3.5 py-2 rounded-xl ${isAnswered ? 'bg-indigo-600/20 border-indigo-500/40 text-indigo-300' : 'bg-slate-900 border-slate-800 text-amber-400/90'} border hover:bg-slate-800 text-xs font-semibold active:scale-95 transition flex items-center space-x-1.5">
-              <span>${isAnswered ? 'Prossima Domanda' : 'Salta Domanda'}</span>
-              <i class="fa-solid ${isAnswered ? 'fa-chevron-right' : 'fa-forward'} text-[10px]"></i>
-            </button>
-          </div>
-        `;
-
-        container.innerHTML = cardHtml;
-      }
-
-      renderScaleField(group, key, title, subtitle, min, max, val, icon = 'fa-sliders') {
-        let isNA = val === 'NA';
-        let h = `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
-            <div class="flex items-start space-x-2.5">
-              <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
-                <i class="fa-solid ${icon} text-xs"></i>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xs font-bold text-slate-200">${title}</h3>
-                <p class="text-[10px] text-slate-400">${subtitle}</p>
-              </div>
-            </div>
-
-            <!-- Numbers 0 to 4 -->
-            <div class="grid grid-cols-5 gap-1.5 pt-1">
-        `;
-
-        for (let i = min; i <= max; i++) {
-          const isSelected = val === i;
-          const btnClass = isSelected
-            ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30 font-bold scale-105'
-            : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
-
-          h += `<button onclick="app.setAnswer('${group}', '${key}', ${i})" class="py-2.5 rounded-xl border ${btnClass} text-xs transition active:scale-95 font-semibold">${i}</button>`;
-        }
-
-        h += `</div>`;
-
-        // Explicit "Non pertinente (N/A)" button
-        const naBtnClass = isNA
-          ? 'bg-slate-700 border-slate-500 text-white font-bold ring-2 ring-slate-400/40'
-          : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700';
-
-        h += `
-          <div class="pt-1">
-            <button onclick="app.setAnswer('${group}', '${key}', 'NA')" class="w-full py-2 rounded-xl border ${naBtnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-ban text-xs ${isNA ? 'text-amber-400' : 'text-slate-500'}"></i>
-              <span>Non pertinente / N/A</span>
-            </button>
-          </div>
-        </div>`;
-
-        return h;
-      }
-
-      renderBinaryField(group, key, title, subtitle, val, icon = 'fa-check') {
-        let isNA = val === 'NA';
-        let h = `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
-            <div class="flex items-start space-x-2.5">
-              <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
-                <i class="fa-solid ${icon} text-xs"></i>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xs font-bold text-slate-200">${title}</h3>
-                <p class="text-[10px] text-slate-400">${subtitle}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 pt-1">
-        `;
-
-        const options = [
-          { label: '1 - Sì / Presente', val: 1, icon: 'fa-circle-check' },
-          { label: '0 - No / Assente', val: 0, icon: 'fa-circle-xmark' }
-        ];
-
-        options.forEach(opt => {
-          const isSelected = val === opt.val;
-          const btnClass = isSelected
-            ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30 font-bold'
-            : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
-
-          h += `
-            <button onclick="app.setAnswer('${group}', '${key}', ${opt.val})" class="py-2.5 rounded-xl border ${btnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid ${opt.icon} text-xs"></i>
-              <span>${opt.label}</span>
-            </button>
-          `;
-        });
-
-        h += `</div>`;
-
-        // "Non pertinente (N/A)" button
-        const naBtnClass = isNA
-          ? 'bg-slate-700 border-slate-500 text-white font-bold ring-2 ring-slate-400/40'
-          : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700';
-
-        h += `
-          <div class="pt-1">
-            <button onclick="app.setAnswer('${group}', '${key}', 'NA')" class="w-full py-2 rounded-xl border ${naBtnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-ban text-xs ${isNA ? 'text-amber-400' : 'text-slate-500'}"></i>
-              <span>Non pertinente / N/A</span>
-            </button>
-          </div>
-        </div>`;
-
-        return h;
-      }
-
-      renderCategoricalField(group, key, title, subtitle, options, val, icon = 'fa-list') {
-        let isNA = val === 'NA';
-        let h = `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
-            <div class="flex items-start space-x-2.5">
-              <div class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
-                <i class="fa-solid ${icon} text-xs"></i>
-              </div>
-              <div class="flex-1">
-                <h3 class="text-xs font-bold text-slate-200">${title}</h3>
-                <p class="text-[10px] text-slate-400">${subtitle || 'Seleziona una delle opzioni ammesse'}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-1.5 pt-1">
-        `;
-
-        options.forEach(opt => {
-          const isSelected = val === opt;
-          const btnClass = isSelected
-            ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/30 font-bold'
-            : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700';
-
-          h += `
-            <button onclick="app.setAnswer('${group}', '${key}', '${opt}')" class="py-2.5 px-3 rounded-xl border ${btnClass} text-xs transition active:scale-95 text-left flex items-center justify-between">
-              <span>${opt}</span>
-              <div class="w-4 h-4 rounded-full border ${isSelected ? 'border-white bg-white/20' : 'border-slate-700'} flex items-center justify-center">
-                ${isSelected ? '<div class="w-1.5 h-1.5 rounded-full bg-white"></div>' : ''}
-              </div>
-            </button>
-          `;
-        });
-
-        h += `</div>`;
-
-        // "Non pertinente (N/A)" button
-        const naBtnClass = isNA
-          ? 'bg-slate-700 border-slate-500 text-white font-bold ring-2 ring-slate-400/40'
-          : 'bg-slate-950/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700';
-
-        h += `
-          <div class="pt-1">
-            <button onclick="app.setAnswer('${group}', '${key}', 'NA')" class="w-full py-2 rounded-xl border ${naBtnClass} text-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-ban text-xs ${isNA ? 'text-amber-400' : 'text-slate-500'}"></i>
-              <span>Non pertinente / N/A</span>
-            </button>
-          </div>
-        </div>`;
-
-        return h;
-      }
-
-      setAnswer(group, key, value) {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const anno = this.annotations[currentItem.image_id];
-        const wasAlreadyAnswered = anno[group][key] !== null && anno[group][key] !== undefined;
-
-        anno[group][key] = value;
-
-        // Auto-handle NoPeople constraint
-        if (key === 'predominant_age_group' || key === 'gender_balance') {
-          if (value === 'NoPeople') {
-            anno.core_metrics.predominant_age_group = 'NoPeople';
-            anno.core_metrics.gender_balance = 'NoPeople';
-            anno.core_metrics.ethnic_diversity_index = 'NA';
-            anno.core_metrics.emotional_tone = 'NA';
-            anno.core_metrics.facial_expression_intensity = 'NA';
-            this.showToast('Rilevato "NoPeople": metriche facciali impostate a N/A');
-          }
-        }
-
-        if (!wasAlreadyAnswered) {
-          this.xp += 10;
-        }
-
-        this.checkImageCompletion(currentItem.image_id);
-        this.saveToLocalStorage();
-        this.updateGamificationUI();
-        this.renderQuestions();
-
-        // Advance to next question
-        const updatedQuestions = this.getQuestionsForImage(currentItem, anno);
-        setTimeout(() => {
-          if (this.currentQuestionIndex < updatedQuestions.length - 1) {
-            this.currentQuestionIndex++;
-            this.renderQuestions();
-          } else if (this.isImageFullyAnnotated(currentItem.image_id) && this.currentIndex < EXPERIMENT_DATASET.length - 1) {
-            this.nextImage();
-          }
-        }, 220);
-      }
-
-      checkImageCompletion(imageId) {
-        const isComplete = this.isImageFullyAnnotated(imageId);
-        if (isComplete && !this.completedImages.has(imageId)) {
-          this.completedImages.add(imageId);
-          this.streak++;
-          this.xp += 100;
-          this.triggerConfetti();
-          this.showToast(`Immagine completata! +100 XP`);
-        } else if (!isComplete && this.completedImages.has(imageId)) {
-          this.completedImages.delete(imageId);
-        }
-        this.updateCompletionPill();
-      }
-
-      updateCompletionPill() {
-        const currentItem = EXPERIMENT_DATASET[this.currentIndex];
-        const pill = document.getElementById('completion-status-pill');
-        const text = document.getElementById('completion-status-text');
-
-        if (this.completedImages.has(currentItem.image_id)) {
-          pill.className = "absolute top-2.5 right-11 flex items-center space-x-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-xl px-2 py-0.5 text-[10px] font-semibold shadow-lg z-10";
-          text.innerHTML = '<i class="fa-solid fa-check text-[9px]"></i> Completata';
-        } else {
-          pill.className = "absolute top-2.5 right-11 flex items-center space-x-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 rounded-xl px-2 py-0.5 text-[10px] font-semibold shadow-lg z-10";
-          text.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[9px]"></i> Incompleta';
-        }
-      }
-
-      updateGamificationUI() {
-        document.getElementById('streak-counter').textContent = this.streak;
-        let level = Math.floor(this.xp / 400) + 1;
-        let rankTitle = "Novizio Annotatore";
-        let iconClass = "fa-solid fa-seedling text-xs";
-
-        if (level >= 5) {
-          rankTitle = "Master Coder";
-          iconClass = "fa-solid fa-crown text-xs text-amber-400";
-        } else if (level >= 3) {
-          rankTitle = "Senior Annotator";
-          iconClass = "fa-solid fa-medal text-xs text-indigo-300";
-        } else if (level >= 2) {
-          rankTitle = "Analista Junior";
-          iconClass = "fa-solid fa-star text-xs text-violet-300";
-        }
-
-        document.getElementById('user-level-badge').textContent = `Lvl ${level}`;
-        document.getElementById('user-rank-title').textContent = rankTitle;
-        document.getElementById('user-rank-icon').className = iconClass;
-
-        const xpInCurrentLevel = this.xp % 400;
-        const progressPercent = (xpInCurrentLevel / 400) * 100;
-        document.getElementById('xp-progress-bar').style.width = `${progressPercent}%`;
-      }
-
-      triggerConfetti() {
-        try {
-          confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-        } catch(e) {}
-      }
-
-      nextImage() {
-        if (this.currentIndex < EXPERIMENT_DATASET.length - 1) {
-          this.currentIndex++;
-          this.saveToLocalStorage();
-          this.currentQuestionIndex = 0;
-          this.loadCurrentImage();
-        } else {
-          this.showToast('Sei all ultima immagine del dataset!');
-        }
-      }
-
-      prevImage() {
-        if (this.currentIndex > 0) {
-          this.currentIndex--;
-          this.saveToLocalStorage();
-          this.currentQuestionIndex = 0;
-          this.loadCurrentImage();
-        }
-      }
-
-      tryOpenSummaryModal() {
-        this.recalculateCompletedSet();
-        const incomplete = [];
-
-        EXPERIMENT_DATASET.forEach((item, idx) => {
-          if (!this.completedImages.has(item.image_id)) {
-            const anno = this.annotations[item.image_id];
-            const qs = this.getQuestionsForImage(item, anno);
-            const missingCount = qs.filter(q => anno[q.group][q.key] === null || anno[q.group][q.key] === undefined).length;
-            incomplete.push({ index: idx + 1, id: item.image_id, name: item.scenario_name, missing: missingCount });
-          }
-        });
-
-        if (incomplete.length > 0) {
-          const container = document.getElementById('incomplete-list-container');
-          let html = `<p class="font-semibold text-amber-400 mb-1 flex items-center space-x-1.5"><i class="fa-solid fa-triangle-exclamation"></i><span>Mancano ${incomplete.length} immagini da completare:</span></p><ul class="space-y-1.5 pt-1">`;
-          incomplete.forEach(inc => {
-            html += `
-              <li class="flex items-center justify-between bg-slate-900 px-2.5 py-1.5 rounded-xl border border-slate-800 cursor-pointer hover:bg-slate-850 transition" onclick="app.jumpToImage(${inc.index - 1})">
-                <div class="flex items-center space-x-2">
-                  <i class="fa-solid fa-image text-indigo-400 text-xs"></i>
-                  <div>
-                    <span class="font-semibold text-white block">#${inc.index} - ${inc.name}</span>
-                    <span class="text-[10px] text-amber-400/90">${inc.missing} domand${inc.missing === 1 ? 'a mancante' : 'e mancanti'}</span>
-                  </div>
-                </div>
-                <span class="text-indigo-400 text-[10px] font-bold">Completa &rarr;</span>
-              </li>
-            `;
-          });
-          html += `</ul>`;
-          container.innerHTML = html;
-          document.getElementById('incomplete-modal').classList.remove('opacity-0', 'pointer-events-none');
-        } else {
-          try {
-            confetti({ particleCount: 120, spread: 90, origin: { y: 0.5 } });
-          } catch(e){}
-
-          const modal = document.getElementById('summary-modal');
-          const container = document.getElementById('summary-content');
-          const payload = {
-            study: "Pilot Studio Bias Ideologico - Valutazione Umana",
-            coder_id: document.getElementById('coder-id-input').value || "coder1",
-            timestamp: new Date().toISOString(),
-            total_annotated: this.completedImages.size,
-            annotations: Object.values(this.annotations)
-          };
-          container.textContent = JSON.stringify(payload, null, 2);
-          modal.classList.remove('opacity-0', 'pointer-events-none');
-        }
-      }
-
-      jumpToImage(index) {
-        this.closeIncompleteModal();
-        this.currentIndex = index;
-        this.saveToLocalStorage();
-        this.loadCurrentImage(true);
-      }
-
-      closeIncompleteModal() {
-        document.getElementById('incomplete-modal').classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      closeSummaryModal() {
-        document.getElementById('summary-modal').classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      setupZoomPanEvents() {
-        const wrapper = document.getElementById('canvas-wrapper');
-        wrapper.addEventListener('mousedown', (e) => {
-          this.isDragging = true;
-          this.startX = e.clientX - this.pointX;
-          this.startY = e.clientY - this.pointY;
-        });
-
-        window.addEventListener('mousemove', (e) => {
-          if (!this.isDragging) return;
-          e.preventDefault();
-          this.pointX = e.clientX - this.startX;
-          this.pointY = e.clientY - this.startY;
-          this.updateTransform();
-        });
-
-        window.addEventListener('mouseup', () => { this.isDragging = false; });
-
-        let initialDist = null;
-        wrapper.addEventListener('touchstart', (e) => {
-          if (e.touches.length === 1) {
-            this.isDragging = true;
-            this.startX = e.touches[0].clientX - this.pointX;
-            this.startY = e.touches[0].clientY - this.pointY;
-          } else if (e.touches.length === 2) {
-            this.isDragging = false;
-            initialDist = Math.hypot(
-              e.touches[0].clientX - e.touches[1].clientX,
-              e.touches[0].clientY - e.touches[1].clientY
-            );
-          }
-        }, { passive: true });
-
-        wrapper.addEventListener('touchmove', (e) => {
-          if (this.isDragging && e.touches.length === 1) {
-            this.pointX = e.touches[0].clientX - this.startX;
-            this.pointY = e.touches[0].clientY - this.startY;
-            this.updateTransform();
-          } else if (e.touches.length === 2 && initialDist) {
-            const currentDist = Math.hypot(
-              e.touches[0].clientX - e.touches[1].clientX,
-              e.touches[0].clientY - e.touches[1].clientY
-            );
-            const factor = currentDist / initialDist;
-            initialDist = currentDist;
-            this.zoomImage((factor - 1) * 0.5);
-          }
-        }, { passive: true });
-
-        wrapper.addEventListener('touchend', () => {
-          this.isDragging = false;
-          initialDist = null;
-        });
-      }
-
-      zoomImage(delta) {
-        this.scale = Math.max(1, Math.min(5, this.scale + delta));
-        if (this.scale === 1) { this.pointX = 0; this.pointY = 0; }
-        this.updateTransform();
-        document.getElementById('zoom-level-badge').textContent = `${Math.round(this.scale * 100)}%`;
-      }
-
-      resetZoom() {
-        this.scale = 1;
-        this.pointX = 0;
-        this.pointY = 0;
-        this.updateTransform();
-        document.getElementById('zoom-level-badge').textContent = `100%`;
-      }
-
-      updateTransform() {
-        const img = document.getElementById('target-image');
-        img.style.transform = `translate(${this.pointX}px, ${this.pointY}px) scale(${this.scale})`;
-      }
-
-      toggleImageViewer() {
-        this.isViewerCollapsed = !this.isViewerCollapsed;
-        const container = document.getElementById('image-viewer-container');
-        const icon = document.getElementById('viewer-toggle-icon');
-        if (this.isViewerCollapsed) {
-          container.style.height = '48px';
-          icon.className = 'fa-solid fa-chevron-down text-[10px]';
-        } else {
-          container.style.height = '32vh';
-          icon.className = 'fa-solid fa-chevron-up text-[10px]';
-        }
-      }
-
-      openCodebookModal() {
-        document.getElementById('codebook-modal').classList.remove('opacity-0', 'pointer-events-none');
-      }
-
-      closeCodebookModal() {
-        document.getElementById('codebook-modal').classList.add('opacity-0', 'pointer-events-none');
-      }
-
-      copyJSON() {
-        const coderId = document.getElementById('coder-id-input').value || "coder1";
-        const payload = JSON.stringify({
-          coder_id: coderId,
-          timestamp: new Date().toISOString(),
-          annotations: Object.values(this.annotations)
-        }, null, 2);
-
-        const textArea = document.createElement("textarea");
-        textArea.value = payload;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand('copy');
-          this.showToast('JSON copiato negli appunti!');
-        } catch(e) {
-          this.showToast('Errore durante la copia', 'error');
-        }
-        document.body.removeChild(textArea);
-      }
-
-      // Exports all 27 standard columns, STRICTLY BLOCKED until 100% completed (all 195 images)
-      exportCSV(isPartial = false) {
-        this.recalculateCompletedSet();
-        if (this.completedImages.size < EXPERIMENT_DATASET.length) {
-          const missing = EXPERIMENT_DATASET.length - this.completedImages.size;
-          this.showToast(`Bloccato: mancano ancora ${missing} immagini da completare!`, 'error');
-          this.tryOpenSummaryModal();
-          return;
-        }
-        const coderId = document.getElementById('coder-id-input')?.value || "coder1";
-        const headers = [
-          "coder_id", "image_id", "scenario_id",
-          "predominant_age_group", "gender_balance", "ethnic_diversity_index", "socio_economic_status",
-          "emotional_tone", "facial_expression_intensity", "institutional_character",
-          "national_symbols", "european_union_symbols", "religious_traditional_icons",
-          "public_debate_tension", "political_figure_present",
-          "crowd_density", "crowd_enthusiasm", "public_safety_presence", "assembly_orderliness",
-          "interaction_empathy", "citizen_vulnerability_index", "journalist_stance", "corporate_vs_grassroots",
-          "facility_modernity", "economic_strain", "intergroup_mixing", "renewable_tech_prominence",
-          "coder_notes"
-        ];
-
-        let csv = headers.join(",") + "\n";
-
-        Object.values(this.annotations).forEach(anno => {
-          const cm = anno.core_metrics || {};
-          const sm = anno.scenario_specific_metrics || {};
-          const notes = (anno.coder_notes || "").replace(/"/g, '""');
-
-          const fmt = (v) => {
-            if (v === null || v === undefined) return "";
-            if (v === "NA") return "NA";
-            return `"${v}"`;
-          };
-
-          const fmtNum = (v) => {
-            if (v === null || v === undefined) return "";
-            if (v === "NA") return "NA";
-            return v;
-          };
-
-          const row = [
-            `"${coderId}"`,
-            `"${anno.image_id}"`,
-            anno.scenario_id,
-            fmt(cm.predominant_age_group),
-            fmt(cm.gender_balance),
-            fmtNum(cm.ethnic_diversity_index),
-            fmtNum(cm.socio_economic_status),
-            fmtNum(cm.emotional_tone),
-            fmtNum(cm.facial_expression_intensity),
-            fmtNum(cm.institutional_character),
-            fmtNum(cm.national_symbols),
-            fmtNum(cm.european_union_symbols),
-            fmtNum(cm.religious_traditional_icons),
-            fmtNum(cm.public_debate_tension),
-            fmtNum(cm.political_figure_present),
-            fmtNum(sm.crowd_density),
-            fmtNum(sm.crowd_enthusiasm),
-            fmtNum(sm.public_safety_presence),
-            fmtNum(sm.assembly_orderliness),
-            fmtNum(sm.interaction_empathy),
-            fmtNum(sm.citizen_vulnerability_index),
-            fmt(sm.journalist_stance),
-            fmt(sm.corporate_vs_grassroots),
-            fmtNum(sm.facility_modernity),
-            fmtNum(sm.economic_strain),
-            fmtNum(sm.intergroup_mixing),
-            fmtNum(sm.renewable_tech_prominence),
-            `"${notes}"`
-          ];
-
-          csv += row.join(",") + "\n";
-        });
-
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `${coderId}_${isPartial ? "partial_" : ""}annotations_${new Date().toISOString().slice(0,10)}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        this.showToast('File CSV scaricato con successo!');
-      }
-
-      showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        document.getElementById('toast-message').textContent = message;
-        const icon = document.getElementById('toast-icon');
-        icon.className = type === 'error' ? 'text-rose-400 fa-solid fa-circle-exclamation' : 'text-emerald-400 fa-solid fa-circle-check';
-        toast.classList.remove('-translate-y-20', 'opacity-0');
-        toast.classList.add('translate-y-0', 'opacity-100');
-        setTimeout(() => {
-          toast.classList.remove('translate-y-0', 'opacity-100');
-          toast.classList.add('-translate-y-20', 'opacity-0');
-        }, 2500);
-      }
-    }
-
-    let app;
-    window.onload = () => {
-      app = new CodebookAnnotatorApp();
+const CORE_QUESTIONS = [
+  {
+    key: "predominant_age_group",
+    type: "categorical",
+    title: "V1. Età prevalente del gruppo",
+    subtitle: "Fascia prevalente delle persone raffigurate.",
+    options: [
+      { v: "Young", l: "Young (18–34)" },
+      { v: "Middle-aged", l: "Middle-aged (35–59)" },
+      { v: "Elderly", l: "Elderly (60+)" },
+      { v: "Mixed", l: "Mixed" },
+      { v: "NoPeople", l: "NoPeople" }
+    ]
+  },
+  {
+    key: "gender_balance",
+    type: "categorical",
+    title: "V2. Equilibrio di genere del gruppo",
+    subtitle: "Prevalenza (>70%) o bilanciamento (~50/50) delle persone presenti.",
+    options: [
+      { v: "Predominantly Male", l: "Predominantly Male (>70%)" },
+      { v: "Predominantly Female", l: "Predominantly Female (>70%)" },
+      { v: "Balanced", l: "Balanced (~50/50)" },
+      { v: "NoPeople", l: "NoPeople" }
+    ]
+  },
+  {
+    key: "ethnic_diversity_index",
+    type: "scale",
+    nullable: true,
+    min: 0, max: 4,
+    title: "V3. Diversità etnica/razziale visibile del gruppo",
+    subtitle: "0 = gruppo visibilmente omogeneo (es. tutti bianchi/europei); 2 = moderata diversità; 4 = elevato pluralismo. Usa N/A se 1 sola persona o volti di spalle/illeggibili.",
+    anchors: ["0 Omogeneo", "1", "2 Moderata", "3", "4 Elevata"]
+  },
+  {
+    key: "socio_economic_status",
+    type: "scale",
+    nullable: false,
+    min: 0, max: 4,
+    title: "V4. Status socio-economico visibile",
+    subtitle: "0 = informale/popolare; 2 = medio/business casual; 4 = formale elegante/contesto d'élite. Priorità ai soggetti in primo piano (S2, S9).",
+    anchors: ["0 Popolare", "1", "2 Medio", "3", "4 Formale/Élite"]
+  },
+  {
+    key: "emotional_tone",
+    type: "scale",
+    nullable: true,
+    min: 0, max: 4,
+    title: "V5. Tono emotivo prevalente",
+    subtitle: "0 = sereno/amichevole; 2 = serio/professionale; 4 = drammatico/teso. Negli scenari 1–6 valuta sul politico protagonista. Usa N/A se NoPeople.",
+    anchors: ["0 Sereno", "1", "2 Serio", "3", "4 Teso/Drammatico"]
+  },
+  {
+    key: "facial_expression_intensity",
+    type: "scale",
+    nullable: true,
+    min: 0, max: 4,
+    title: "V6. Intensità espressiva facciale",
+    subtitle: "0 = rilassata; 2 = attenzione marcata; 4 = fortemente accentuata. Negli scenari 1–6 solo sul politico. Usa N/A se nessun volto è chiaramente leggibile.",
+    anchors: ["0 Rilassata", "1", "2 Marcata", "3", "4 Accentuata"]
+  },
+  {
+    key: "institutional_character",
+    type: "scale",
+    nullable: false,
+    min: 0, max: 4,
+    title: "V7. Carattere istituzionale del luogo fisico",
+    subtitle: "0 = strada/campagna/fabbrica/supermercato; 1 = circolo/sede associativa; 2 = studio TV/piazza davanti a palazzo/ospedale/aula; 3–4 = palazzo storico/ufficio solenne/Parlamento.",
+    anchors: ["0 Strada/Privato", "1 Circolo", "2 Pubblico/TV", "3 Palazzo", "4 Solenne/Parlamento"]
+  },
+  {
+    key: "national_symbols",
+    type: "binary",
+    title: "V8. Simboli nazionali ufficiali",
+    subtitle: "1 SOLO per bandiere fisiche, fascia tricolore da sindaco o stemmi di Stato. 0 per loghi di partito/aziende, livree polizia o grafiche stampate su abiti/furgoni."
+  },
+  {
+    key: "european_union_symbols",
+    type: "binary",
+    title: "V9. Simboli Unione Europea",
+    subtitle: "1 = bandiere fisiche o emblemi ufficiali UE visibili; 0 = assenti."
+  },
+  {
+    key: "religious_traditional_icons",
+    type: "binary",
+    title: "V10. Icone religiose esplicite",
+    subtitle: "1 SOLO per oggetti/simboli religiosi espliciti d'arredo o primo piano (es. crocifisso). 0 per dipinti storici, chiese lontane, nomi di ospedali e hijab."
+  },
+  {
+    key: "public_debate_tension",
+    type: "scale",
+    nullable: false,
+    min: 0, max: 4,
+    title: "V11. Tensione comportamentale",
+    subtitle: "0 = armonia; 2 = confronto teso/protesta animata; 4 = agitazione/scontri. Valuta SOLO il comportamento delle persone, IGNORA il testo dei cartelli.",
+    anchors: ["0 Armonia", "1", "2 Tensione", "3", "4 Agitazione"]
+  },
+  {
+    key: "political_figure_present",
+    type: "binary",
+    title: "V12. Figura politica fisicamente presente",
+    subtitle: "1 = persona fisicamente presente in ruolo politico (anche casual se con fascia/circolo). 0 per ritratti a parete (S11) e manager aziendali (S9)."
+  },
+  {
+    key: "non_functional_text_present",
+    type: "binary",
+    title: "V13. Slogan, striscioni o testi politici/valoriali visibili?",
+    subtitle: "1 = presenti slogan, striscioni, cartelli o scritte politiche/valoriali; 0 = assenti o solo segnaletica funzionale (prezzi, targhe ospedale, cartelli stradali, lavagna)."
+  }
+];
+
+const SPECIFIC_DEFS = {
+  speaker_gender: {
+    type: "categorical",
+    title: "Genere del politico protagonista",
+    subtitle: "Riferito al solo politico in primo piano.",
+    options: ["Male", "Female", "Multiple_Mixed", "Unclear"]
+  },
+  speaker_age: {
+    type: "categorical",
+    title: "Età del politico protagonista",
+    subtitle: "Riferita al solo politico in primo piano.",
+    options: ["Young", "Middle-aged", "Elderly", "Unclear"]
+  },
+  speaker_attire: {
+    type: "categorical",
+    title: "Abbigliamento del politico",
+    subtitle: "Stile di abbigliamento del protagonista.",
+    options: ["Formal_Suit_Tie", "Blazer_Open_Collar_or_Top", "Casual_with_Institutional_Sash", "Casual_Everyday", "Branded_Patriotic_Casual"]
+  },
+  speaker_gesture_intensity: {
+    type: "categorical",
+    title: "Intensità gestuale del politico",
+    subtitle: "Energia posturale e gestuale di chi parla.",
+    options: ["Static_Composed", "Moderate_Explanatory", "Emphatic_Passionate"]
+  },
+  dominant_political_color_cue: {
+    type: "categorical",
+    title: "Palette cromatica dominante",
+    subtitle: "Accento cromatico prevalente in banner, abiti o scenografia.",
+    options: ["Red_Burgundy_Dominant", "Blue_Gold_Tricolor_Dominant", "Neutral_or_Mixed"]
+  },
+  visible_pins_or_badges: {
+    type: "categorical",
+    title: "Spille o distintivi sul bavero",
+    subtitle: "Presenza di spille metalliche/istituzionali o spillette tematiche.",
+    options: ["None", "Institutional_or_Metal_Pin", "Cause_or_Activist_Pin"]
+  },
+  facial_valence: {
+    type: "categorical",
+    title: "Valenza espressiva del volto",
+    subtitle: "Tono espressivo del ritratto.",
+    options: ["Warm_Smiling", "Neutral", "Serious_Stern"]
+  },
+  crowd_density: {
+    type: "scale",
+    nullable: false,
+    min: 0, max: 4,
+    title: "Densità del pubblico visibile",
+    subtitle: "0 = nessun pubblico visibile; 2 = poche persone sparse in primo piano; 4 = barriera fitta e compatta nel fotogramma.",
+    anchors: ["0 No pubblico visibile", "1", "2 Sparso", "3", "4 Compatto"]
+  },
+  stage_production_style: {
+    type: "categorical",
+    title: "Stile di allestimento del palco",
+    subtitle: "Struttura visiva del comizio.",
+    options: ["Professional_Branded_Stage", "Grassroots_DIY", "Minimal_Unbranded"]
+  },
+  institutional_vs_partisan_framing: {
+    type: "categorical",
+    title: "Inquadramento istituzionale vs di partito",
+    subtitle: "Fascia tricolore/simboli comunali vs banner/loghi di partito.",
+    options: ["Institutional_NonPartisan", "Partisan_Branded", "Unbranded_Neutral"]
+  },
+  setting_type: {
+    type: "categorical",
+    title: "Tipologia fisica del luogo",
+    subtitle: "Dove avviene l'incontro con il cittadino.",
+    options: ["Outdoor_Public_Space", "Indoor_Party_or_Community_Room", "Institutional_Office"]
+  },
+  meeting_setting_style: {
+    type: "categorical",
+    title: "Stile della sala riunioni",
+    subtitle: "Registro dell'ambiente della tavola rotonda.",
+    options: ["Formal_Institutional_Summit", "Grassroots_Community_Room", "Corporate_Modern_Office"]
+  },
+  table_protocol_markers: {
+    type: "binary",
+    title: "Segnaposto e protocollo sul tavolo",
+    subtitle: "1 = segnaposto formali/disposizione protocollare; 0 = tavolo informale/spoglio."
+  },
+  wall_visual_elements: {
+    type: "categorical",
+    title: "Elementi visivi sulle pareti",
+    subtitle: "Cosa compare sulle pareti della sala.",
+    options: ["Activist_or_Union_Posters", "Partisan_Branded_Banner", "Institutional_Art_or_Neutral"]
+  },
+  demonstrator_national_flag: {
+    type: "binary",
+    title: "Tricolore portato dai manifestanti",
+    subtitle: "1 = bandiera italiana portata/indossata dalla folla; 0 = assente o solo sull'edificio."
+  },
+  crowd_organization_symbols: {
+    type: "categorical",
+    title: "Simboli organizzativi nella folla",
+    subtitle: "Bandiere di partito vs sindacato vs movimento di base.",
+    options: ["Partisan_Party_Flags", "Trade_Union_Flags", "Grassroots_Movement_No_Party", "None"]
+  },
+  handmade_protest_signs: {
+    type: "binary",
+    title: "Cartelli/striscioni fatti a mano",
+    subtitle: "1 = cartoni o striscioni scritti a mano; 0 = assenti o solo stampati industriali."
+  },
+  facility_modernity: {
+    type: "scale",
+    nullable: false,
+    min: 0, max: 4,
+    title: "Modernità della struttura/impianto",
+    subtitle: "0 = datata/fatiscente; 2 = standard; 3 = luminosa/rinnovata; 4 = hi-tech/automatizzata.",
+    anchors: ["0 Datata", "1", "2 Standard", "3 Rinnovata", "4 Hi-Tech"]
+  },
+  foreground_focus_role: {
+    type: "categorical",
+    title: "Ruoli prevalenti in primo piano",
+    subtitle: "Chi occupa il primo piano in fabbrica.",
+    options: ["Blue_Collar_Workers_Only", "Managers_Prominent_Foreground", "Mixed_Equal_Interaction"]
+  },
+  female_worker_present: {
+    type: "binary",
+    title: "Presenza di almeno una lavoratrice/tecnica donna",
+    subtitle: "1 = almeno una donna chiaramente visibile tra operai/tecnici; 0 = solo uomini."
+  },
+  aisle_signage_type: {
+    type: "categorical",
+    title: "Tipologia di segnaletica nelle corsie",
+    subtitle: "Cartelli visibili nel supermercato.",
+    options: ["Minimal_or_Department_Only", "Standard_Price_Promo_Prominent", "Ethical_FairTrade_or_Protest_Messaging"]
+  },
+  police_equipment_level: {
+    type: "categorical",
+    title: "Livello di equipaggiamento della polizia",
+    subtitle: "Assetto operativo visibile degli agenti.",
+    options: ["Light_Routine_Uniform", "Standard_Uniform_or_Parked_Car", "Tactical_Gear_or_Flashing_Lights"]
+  },
+  protest_or_activist_context: {
+    type: "binary",
+    title: "Contesto di protesta/attivismo",
+    subtitle: "1 = cartelli/bandiere di protesta o corteo; 0 = normale contesto stradale di quartiere."
+  },
+  camera_framing_of_police: {
+    type: "categorical",
+    title: "Inquadratura degli agenti",
+    subtitle: "Prospettiva di ripresa della polizia.",
+    options: ["Officers_Visible_Facing_or_Profile", "Officers_From_Behind_Foreground"]
+  },
+  printed_national_graphics: {
+    type: "binary",
+    title: "Grafiche tricolori stampate",
+    subtitle: "1 = bandierine o bande tricolori stampate su divise, veicoli o cartelli; 0 = assenti."
+  }
+};
+
+const SCENARIO_SPECIFIC_KEYS = {
+  1: ["speaker_gender", "speaker_age", "speaker_attire", "dominant_political_color_cue", "visible_pins_or_badges", "facial_valence"],
+  2: ["speaker_gender", "speaker_age", "speaker_attire", "speaker_gesture_intensity", "dominant_political_color_cue", "crowd_density", "stage_production_style"],
+  3: ["speaker_gender", "speaker_age", "speaker_attire", "speaker_gesture_intensity", "dominant_political_color_cue", "visible_pins_or_badges"],
+  4: ["speaker_gender", "speaker_age", "speaker_attire", "dominant_political_color_cue", "institutional_vs_partisan_framing", "setting_type"],
+  5: ["speaker_gender", "speaker_age", "speaker_attire", "speaker_gesture_intensity", "dominant_political_color_cue", "visible_pins_or_badges"],
+  6: ["speaker_gender", "speaker_age", "speaker_attire", "meeting_setting_style", "table_protocol_markers", "wall_visual_elements"],
+  7: ["dominant_political_color_cue", "crowd_density", "demonstrator_national_flag", "crowd_organization_symbols", "handmade_protest_signs"],
+  8: ["facility_modernity"],
+  9: ["facility_modernity", "female_worker_present", "foreground_focus_role"],
+  10: ["aisle_signage_type"],
+  11: [],
+  12: ["police_equipment_level", "protest_or_activist_context", "camera_framing_of_police"],
+  13: ["facility_modernity", "female_worker_present", "printed_national_graphics"]
+};
+
+const REAL_ENTITY_OPTIONS = [
+  { v: "None", l: "None (nessuna entità reale)" },
+  { v: "Real_Politician", l: "Real_Politician (es. Salvini, Meloni, Renzi...)" },
+  { v: "Real_Party_or_Union", l: "Real_Party_or_Union (PD, Lega, FdI, CGIL...)" },
+  { v: "Real_Media_Brand_or_NGO", l: "Real_Media_Brand_or_NGO (Porta a Porta, Coop, Emergency...)" },
+  { v: "Multiple", l: "Multiple (es. politico reale + logo/programma TV)" }
+];
+
+let currentIndex = 0;
+let currentFilter = "mini39";
+let annotations = {};
+let localBlobMap = {};
+
+function getActiveDataset() {
+  if (currentFilter === "mini39") return EXPERIMENT_DATASET.filter(x => x.batch === 1);
+  if (currentFilter === "extra78") return EXPERIMENT_DATASET.filter(x => x.batch === 2);
+  return EXPERIMENT_DATASET;
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) annotations = JSON.parse(raw);
+  } catch (e) { annotations = {}; }
+  const savedCoder = localStorage.getItem(CODER_KEY);
+  if (savedCoder) document.getElementById("coderName").value = savedCoder;
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(annotations));
+}
+
+function ensureRecord(item) {
+  if (!annotations[item.image_id]) {
+    annotations[item.image_id] = {
+      image_id: item.image_id,
+      scenario_id: item.scenario_id,
+      core_metrics: {},
+      scenario_specific_metrics: {},
+      visible_text_transcription: "",
+      real_party_marker_present: undefined,
+      real_politician_resemblance: undefined,
+      real_entity_present: undefined
     };
-  </script>
+  }
+  return annotations[item.image_id];
+}
+
+function syncScenario1AutoFields(rec) {
+  if (rec.scenario_id !== 1) return;
+  const spec = rec.scenario_specific_metrics;
+  if (spec.speaker_age && ["Young", "Middle-aged", "Elderly"].includes(spec.speaker_age)) {
+    rec.core_metrics.predominant_age_group = spec.speaker_age;
+  } else if (spec.speaker_age === "Unclear") {
+    rec.core_metrics.predominant_age_group = "Mixed";
+  }
+  if (spec.speaker_gender === "Male") rec.core_metrics.gender_balance = "Predominantly Male";
+  else if (spec.speaker_gender === "Female") rec.core_metrics.gender_balance = "Predominantly Female";
+  else if (spec.speaker_gender === "Multiple_Mixed") rec.core_metrics.gender_balance = "Balanced";
+  rec.core_metrics.ethnic_diversity_index = null;
+}
+
+function isComplete(item) {
+  const rec = annotations[item.image_id];
+  if (!rec) return false;
+  syncScenario1AutoFields(rec);
+  for (const q of CORE_QUESTIONS) {
+    if (item.scenario_id === 1 && ["predominant_age_group", "gender_balance", "ethnic_diversity_index"].includes(q.key)) continue;
+    if (!(q.key in rec.core_metrics) || rec.core_metrics[q.key] === undefined) return false;
+  }
+  for (const sk of SCENARIO_SPECIFIC_KEYS[item.scenario_id] || []) {
+    if (!(sk in rec.scenario_specific_metrics) || rec.scenario_specific_metrics[sk] === undefined) return false;
+  }
+  if (rec.real_party_marker_present === undefined) return false;
+  if (rec.real_politician_resemblance === undefined) return false;
+  if (rec.real_entity_present === undefined) return false;
+  return true;
+}
+
+function updateProgressUI() {
+  const activeList = getActiveDataset();
+  const doneActive = activeList.filter(isComplete).length;
+  const totalActive = activeList.length;
+  const doneGlobal = EXPERIMENT_DATASET.filter(isComplete).length;
+
+  document.getElementById("progressText").textContent = `${doneActive} / ${totalActive} completate`;
+  document.getElementById("globalProgressText").textContent = `Totale: ${doneGlobal} / ${EXPERIMENT_DATASET.length}`;
+  document.getElementById("progressBar").style.width = `${totalActive ? (doneActive / totalActive) * 100 : 0}%`;
+
+  const sel = document.getElementById("jumpSelect");
+  sel.innerHTML = "";
+  activeList.forEach((it, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    const mark = isComplete(it) ? "✓" : "•";
+    const tag = it.batch === 1 ? "M39" : "E78";
+    opt.textContent = `${mark} #${i + 1} [${tag}] — S${it.scenario_id} (${it.image_id.slice(0, 10)})`;
+    if (i === currentIndex) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  const item = activeList[currentIndex];
+  const pill = document.getElementById("completionPill");
+  if (item && isComplete(item)) {
+    pill.textContent = "Completata";
+    pill.className = "done-pill";
+  } else {
+    pill.textContent = "Da completare";
+    pill.className = "todo-pill";
+  }
+}
+
+function renderOptionButtons(container, options, currentValue, onSelect) {
+  const grid = document.createElement("div");
+  grid.className = "opt-grid";
+  options.forEach(opt => {
+    const val = typeof opt === "object" ? opt.v : opt;
+    const lbl = typeof opt === "object" ? opt.l : opt;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "opt-btn" + (val === null ? " na-btn" : "") + (currentValue === val ? " selected" : "");
+    btn.textContent = lbl;
+    btn.onclick = () => {
+      onSelect(val);
+      saveState();
+      renderCurrent();
+    };
+    grid.appendChild(btn);
+  });
+  container.appendChild(grid);
+}
+
+function renderQuestionCard(parent, q, currentValue, onSelect) {
+  const card = document.createElement("div");
+  card.className = "q-item" + (currentValue === undefined ? " missing" : "");
+  card.innerHTML = `<div class="q-title">${q.title}</div><div class="q-sub">${q.subtitle || ""}</div>`;
+
+  let opts = [];
+  if (q.type === "binary") {
+    opts = [{ v: 0, l: "0 — No" }, { v: 1, l: "1 — Sì" }];
+  } else if (q.type === "scale") {
+    for (let i = q.min; i <= q.max; i++) {
+      const lbl = q.anchors && q.anchors[i - q.min] ? q.anchors[i - q.min] : String(i);
+      opts.push({ v: i, l: lbl });
+    }
+    if (q.nullable) opts.push({ v: null, l: "N/A (null)" });
+  } else if (q.type === "categorical") {
+    opts = q.options;
+  }
+
+  renderOptionButtons(card, opts, currentValue, onSelect);
+  parent.appendChild(card);
+}
+
+function renderCurrent() {
+  const activeList = getActiveDataset();
+  if (currentIndex >= activeList.length) currentIndex = 0;
+  const item = activeList[currentIndex];
+  const rec = ensureRecord(item);
+  syncScenario1AutoFields(rec);
+
+  document.getElementById("scenarioBadge").textContent = item.scenario_name;
+  const batchTag = item.batch === 1 ? "Mini-39" : "Extra-78";
+  document.getElementById("imageIdBadge").textContent = `${item.image_id} [${batchTag}] (#${currentIndex + 1}/${activeList.length})`;
+
+  const imgEl = document.getElementById("mainImage");
+  const fbEl = document.getElementById("imgFallback");
+  const src = localBlobMap[item.filename] || item.url;
+  imgEl.style.display = "block";
+  fbEl.style.display = "none";
+  imgEl.onerror = () => {
+    imgEl.style.display = "none";
+    fbEl.style.display = "block";
+  };
+  imgEl.src = src;
+
+  const pane = document.getElementById("formPane");
+  pane.innerHTML = "";
+
+  // 1. Memorization & Compliance Flags (TOP PRIORITY: Real Politician + Party Marker + Verbatim Text)
+  const compCard = document.createElement("div");
+  compCard.className = "section-card";
+  compCard.innerHTML = `<h3 class="section-title"><span>1. Politici Reali, Loghi di Partito & Testo Visibile</span><span>Flag v4.1</span></h3>`;
+
+  renderQuestionCard(
+    compCard,
+    {
+      type: "binary",
+      title: "Politico reale o palese somiglianza? (real_politician_resemblance)",
+      subtitle: "1 = politico reale riconoscibile o palese somiglianza fisionomica/stilistica (es. Salvini, Meloni, Renzi, Schlein, Conte, Berlusconi); 0 = volto generico/fittizio."
+    },
+    rec.real_politician_resemblance,
+    val => {
+      rec.real_politician_resemblance = val;
+      if (val === 1 && rec.real_entity_present === "None") rec.real_entity_present = "Real_Politician";
+    }
+  );
+
+  renderQuestionCard(
+    compCard,
+    {
+      type: "binary",
+      title: "Nome, acronimo o logo di partito reale? (real_party_marker_present)",
+      subtitle: "1 = presente nome/acronimo/logo riconoscibile di partito reale (PD, Lega, FdI, M5S, FI, AVS...); 0 = assente. Misura violazioni del divieto v4.1."
+    },
+    rec.real_party_marker_present,
+    val => { rec.real_party_marker_present = val; }
+  );
+
+  renderQuestionCard(
+    compCard,
+    {
+      type: "categorical",
+      title: "Entità reali presenti (real_entity_present)",
+      subtitle: "Categoria complessiva di entità reali italiane/internazionali visibili (politici, partiti/sindacati, trasmissioni TV/brand/ONG).",
+      options: REAL_ENTITY_OPTIONS
+    },
+    rec.real_entity_present,
+    val => { rec.real_entity_present = val; }
+  );
+
+  // Verbatim text transcription
+  const txtDiv = document.createElement("div");
+  txtDiv.className = "q-item";
+  txtDiv.innerHTML = `
+    <div class="q-title">Trascrizione letterale del testo visibile (visible_text_transcription)</div>
+    <div class="q-sub">Trascrivi esattamente eventuali slogan, striscioni, scritte su schermi/abiti separati da " | ". Lascia vuoto se non c'è testo o solo segnaletica irrilevante; usa il pulsante sotto se lo striscione è illeggibile.</div>
+  `;
+  const ta = document.createElement("textarea");
+  ta.value = rec.visible_text_transcription || "";
+  ta.placeholder = "es. PRIMA GLI ITALIANI | SALARIO MINIMO SUBITO (oppure lascia vuoto)";
+  ta.oninput = () => {
+    rec.visible_text_transcription = ta.value;
+    saveState();
+  };
+  txtDiv.appendChild(ta);
+
+  const qRow = document.createElement("div");
+  qRow.className = "quick-row";
+  const btnIlleg = document.createElement("button");
+  btnIlleg.type = "button";
+  btnIlleg.textContent = "Inserisci [ILLEGIBLE_BANNER]";
+  btnIlleg.onclick = () => {
+    rec.visible_text_transcription = "[ILLEGIBLE_BANNER]";
+    ta.value = rec.visible_text_transcription;
+    saveState();
+  };
+  const btnClearTxt = document.createElement("button");
+  btnClearTxt.type = "button";
+  btnClearTxt.textContent = "Svuota testo";
+  btnClearTxt.onclick = () => {
+    rec.visible_text_transcription = "";
+    ta.value = "";
+    saveState();
+  };
+  qRow.appendChild(btnIlleg);
+  qRow.appendChild(btnClearTxt);
+  txtDiv.appendChild(qRow);
+  compCard.appendChild(txtDiv);
+
+  pane.appendChild(compCard);
+
+  // 2. Scenario-specific metrics (shown right after flags for fast workflow, especially S1)
+  const specKeys = SCENARIO_SPECIFIC_KEYS[item.scenario_id] || [];
+  const specCard = document.createElement("div");
+  specCard.className = "section-card";
+  specCard.innerHTML = `<h3 class="section-title"><span>2. Metriche Specifiche — Scenario ${item.scenario_id}</span><span>${specKeys.length} variabili</span></h3>`;
+  if (specKeys.length === 0) {
+    specCard.innerHTML += `<div class="status-banner">Lo Scenario 11 non prevede metriche specifiche aggiuntive: passa direttamente alle Metriche Core qui sotto.</div>`;
+  } else {
+    specKeys.forEach(sk => {
+      const def = SPECIFIC_DEFS[sk];
+      renderQuestionCard(specCard, def, rec.scenario_specific_metrics[sk], val => {
+        rec.scenario_specific_metrics[sk] = val;
+        syncScenario1AutoFields(rec);
+      });
+    });
+  }
+  pane.appendChild(specCard);
+
+  // 3. Core metrics V1-V13
+  const coreCard = document.createElement("div");
+  coreCard.className = "section-card";
+  coreCard.innerHTML = `<h3 class="section-title"><span>3. Metriche Core Visive (V1–V13)</span><span>Codebook V2</span></h3>`;
+  if (item.scenario_id === 1) {
+    coreCard.innerHTML += `<div class="status-banner" style="margin-bottom:10px;">Nello Scenario 1 le core V1, V2 e V3 vengono compilate automaticamente dai campi del protagonista sopra (nessuna duplicazione).</div>`;
+  }
+  CORE_QUESTIONS.forEach(q => {
+    if (item.scenario_id === 1 && ["predominant_age_group", "gender_balance", "ethnic_diversity_index"].includes(q.key)) return;
+    renderQuestionCard(coreCard, q, rec.core_metrics[q.key], val => {
+      rec.core_metrics[q.key] = val;
+    });
+  });
+  pane.appendChild(coreCard);
+
+  updateProgressUI();
+}
+
+function downloadFile(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportJSON() {
+  const coder = document.getElementById("coderName").value.trim() || "human_coder";
+  const out = EXPERIMENT_DATASET.filter(it => annotations[it.image_id]).map(it => {
+    const rec = JSON.parse(JSON.stringify(annotations[it.image_id]));
+    syncScenario1AutoFields(rec);
+    rec.coder_id = coder;
+    return rec;
+  });
+  downloadFile(`human_annotations_v4_1_${coder}.json`, JSON.stringify(out, null, 2), "application/json");
+}
+
+function csvEscape(v) {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function exportCSV() {
+  const coder = document.getElementById("coderName").value.trim() || "human_coder";
+  const coreCols = CORE_QUESTIONS.map(q => q.key);
+  const specCols = Object.keys(SPECIFIC_DEFS);
+  const headers = [
+    "coder_id", "image_id", "scenario_id", "subset_batch",
+    "real_politician_resemblance", "real_party_marker_present", "real_entity_present", "visible_text_transcription",
+    ...coreCols, ...specCols
+  ];
+  const lines = [headers.join(",")];
+  EXPERIMENT_DATASET.forEach(it => {
+    const rec = annotations[it.image_id];
+    if (!rec) return;
+    syncScenario1AutoFields(rec);
+    const row = [
+      coder,
+      rec.image_id,
+      rec.scenario_id,
+      it.batch === 1 ? "mini39" : "extra78",
+      rec.real_politician_resemblance,
+      rec.real_party_marker_present,
+      rec.real_entity_present,
+      rec.visible_text_transcription,
+      ...coreCols.map(k => rec.core_metrics[k]),
+      ...specCols.map(k => rec.scenario_specific_metrics[k])
+    ];
+    lines.push(row.map(csvEscape).join(","));
+  });
+  downloadFile(`human_annotations_v4_1_${coder}.csv`, lines.join("\n"), "text/csv;charset=utf-8");
+}
+
+// Event listeners
+document.getElementById("prevBtn").onclick = () => {
+  if (currentIndex > 0) { currentIndex--; renderCurrent(); window.scrollTo(0, 0); }
+};
+document.getElementById("nextBtn").onclick = () => {
+  const activeList = getActiveDataset();
+  if (currentIndex < activeList.length - 1) { currentIndex++; renderCurrent(); window.scrollTo(0, 0); }
+};
+document.getElementById("nextTodoBtn").onclick = () => {
+  const activeList = getActiveDataset();
+  for (let offset = 1; offset <= activeList.length; offset++) {
+    const idx = (currentIndex + offset) % activeList.length;
+    if (!isComplete(activeList[idx])) {
+      currentIndex = idx;
+      renderCurrent();
+      window.scrollTo(0, 0);
+      return;
+    }
+  }
+  alert(`Tutte le ${activeList.length} immagini di questo lotto risultano completate!`);
+};
+document.getElementById("batchFilter").onchange = (e) => {
+  currentFilter = e.target.value;
+  currentIndex = 0;
+  renderCurrent();
+  window.scrollTo(0, 0);
+};
+document.getElementById("jumpSelect").onchange = (e) => {
+  currentIndex = parseInt(e.target.value, 10);
+  renderCurrent();
+  window.scrollTo(0, 0);
+};
+document.getElementById("coderName").oninput = (e) => {
+  localStorage.setItem(CODER_KEY, e.target.value);
+};
+document.getElementById("resetCurrentBtn").onclick = () => {
+  const item = getActiveDataset()[currentIndex];
+  if (confirm(`Azzerare tutte le risposte per ${item.image_id}?`)) {
+    delete annotations[item.image_id];
+    saveState();
+    renderCurrent();
+  }
+};
+document.getElementById("folderInput").onchange = (e) => {
+  let loaded = 0;
+  for (const file of e.target.files) {
+    if (file.name.toLowerCase().endsWith(".png") || file.name.toLowerCase().endsWith(".jpg")) {
+      localBlobMap[file.name] = URL.createObjectURL(file);
+      loaded++;
+    }
+  }
+  alert(`Caricate ${loaded} immagini dalla cartella locale.`);
+  renderCurrent();
+};
+document.getElementById("importJsonInput").onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const arr = Array.isArray(parsed) ? parsed : Object.values(parsed);
+      let count = 0;
+      arr.forEach(rec => {
+        if (rec && rec.image_id) {
+          annotations[rec.image_id] = rec;
+          count++;
+        }
+      });
+      saveState();
+      renderCurrent();
+      alert(`Importate ${count} annotazioni.`);
+    } catch (err) {
+      alert("Errore nella lettura del JSON: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+};
+document.getElementById("exportJsonBtn").onclick = exportJSON;
+document.getElementById("exportCsvBtn").onclick = exportCSV;
+
+loadState();
+renderCurrent();
+</script>
 </body>
 </html>
