@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Blind Visual Annotator v4.1 — Codebook V2</title>
+  <title>Blind Visual Annotator v4.2 — Codebook V2.2</title>
   <style>
     :root {
       --bg: #020617;
@@ -524,7 +524,7 @@
 <!-- CODER SETUP MODAL (ONE-TIME AT START) -->
 <div id="coderModal" class="modal-backdrop hidden">
   <div class="modal-box">
-    <h2>Benvenuta/o nell'Annotator v4.1</h2>
+    <h2>Benvenuta/o nell'Annotator v4.2</h2>
     <p>Inserisci il tuo nome o ID codificatore <strong>una sola volta</strong>: verra' salvato automaticamente per tutta la sessione e incluso nel CSV finale.</p>
     <input type="text" id="coderModalInput" class="modal-input" placeholder="es. Silvia / coder1 / coder2" />
     <div style="display:flex; justify-content:flex-end; gap:8px;">
@@ -537,7 +537,7 @@
   <!-- HEADER -->
   <header>
     <div class="h-left">
-      <span class="h-title">Annotator v4.1</span>
+      <span class="h-title">Annotator v4.2</span>
       <span class="pill pill-accent" id="progressText">0 / 39</span>
       <span class="pill pill-ok" id="globalProgressText">Tot: 0 / 117</span>
       <button type="button" class="pill pill-coder" id="coderBadgeBtn" title="Clicca se vuoi cambiare nome codificatore">👤 --</button>
@@ -610,7 +610,7 @@
 </div>
 
 <script>
-const STORAGE_KEY = "thesis_annotator_v4_1_3rep_v1";
+const STORAGE_KEY = "thesis_annotator_v4_2_3rep_v1";
 const CODER_KEY = "thesis_annotator_v4_1_coder";
 
 const EXPERIMENT_DATASET = [
@@ -1577,6 +1577,7 @@ const SPECIFIC_KEYS_V4_1 = [
   "visible_pins_or_badges",
   "crowd_density",
   "facility_modernity",
+  "ward_crowding",
   "female_worker_present",
   "facial_valence",
   "stage_production_style",
@@ -1611,9 +1612,15 @@ const SPECIFIC_DEFS = {
   },
   speaker_attire: {
     group: "scenario_specific_metrics", key: "speaker_attire", type: "categorical",
-    title: "Abbigliamento del politico",
-    subtitle: "Stile di abbigliamento del protagonista.",
-    options: ["Formal_Suit_Tie", "Blazer_Open_Collar_or_Top", "Casual_with_Institutional_Sash", "Casual_Everyday", "Branded_Patriotic_Casual"]
+    title: "Abbigliamento del politico (gender-neutral)",
+    subtitle: "Formal = giacca+cravatta (uomo) o tailleur/blazer formale strutturato (donna); Smart Casual = giacca senza cravatta / cardigan / top informale.",
+    options: [
+      { v: "Formal_Business_Attire", l: "Formal_Business_Attire (abito+cravatta / tailleur formale)" },
+      { v: "Smart_Casual_Open_Collar", l: "Smart_Casual_Open_Collar (giacca aperta / cardigan / top)" },
+      { v: "Casual_with_Institutional_Sash", l: "Casual_with_Institutional_Sash (casual + fascia tricolore)" },
+      { v: "Casual_Everyday", l: "Casual_Everyday (felpa / t-shirt / jeans)" },
+      { v: "Branded_Patriotic_Casual", l: "Branded_Patriotic_Casual (casual con scritte/bandierine)" }
+    ]
   },
   speaker_gesture_intensity: {
     group: "scenario_specific_metrics", key: "speaker_gesture_intensity", type: "categorical",
@@ -1697,10 +1704,16 @@ const SPECIFIC_DEFS = {
     subtitle: "1 = cartoni o striscioni scritti a mano; 0 = assenti o solo stampati industriali."
   },
   facility_modernity: {
-    group: "scenario_specific_metrics", key: "facility_modernity", type: "scale", nullable: false, min: 0, max: 4,
-    title: "Modernita' della struttura/impianto",
-    subtitle: "0 = datata/fatiscente; 2 = standard; 3 = luminosa/rinnovata; 4 = hi-tech/automatizzata.",
-    anchors: ["Datata", "", "Standard", "Rinnovata", "Hi-Tech"]
+    group: "scenario_specific_metrics", key: "facility_modernity", type: "scale", nullable: false, min: 0, max: 2,
+    title: "Modernita' struttura/impianto (solo oggetti fisici, 0–2)",
+    subtitle: "0 = datata/usurata (macchinari/arredi vecchi, ambiente vissuto); 1 = standard ordinario (default); 2 = avanzata/hi-tech (robot, automazione, monitor/struttura visibilmente nuova).",
+    anchors: ["0 Datata/Usurata", "1 Standard", "2 Hi-Tech/Nuova"]
+  },
+  ward_crowding: {
+    group: "scenario_specific_metrics", key: "ward_crowding", type: "scale", nullable: false, min: 0, max: 2,
+    title: "Affollamento del reparto (S8, 0–2)",
+    subtitle: "0 = calma/spaziosa (pochi pazienti); 1 = attivita' intensa ma ordinata; 2 = sovraffollata/congestione (letti/barelle ravvicinati o code).",
+    anchors: ["0 Calma", "1 Attiva/Ordinata", "2 Sovraffollata"]
   },
   foreground_focus_role: {
     group: "scenario_specific_metrics", key: "foreground_focus_role", type: "categorical",
@@ -1746,17 +1759,17 @@ const SPECIFIC_DEFS = {
 const SCENARIO_SPECIFIC_KEYS = {
   1: ["speaker_gender", "speaker_age", "speaker_attire", "dominant_political_color_cue", "visible_pins_or_badges", "facial_valence"],
   2: ["speaker_gender", "speaker_age", "speaker_attire", "speaker_gesture_intensity", "dominant_political_color_cue", "crowd_density", "stage_production_style"],
-  3: ["speaker_gender", "speaker_age", "speaker_attire", "speaker_gesture_intensity", "dominant_political_color_cue", "visible_pins_or_badges"],
+  3: ["speaker_gender", "speaker_age", "speaker_attire", "speaker_gesture_intensity", "visible_pins_or_badges"],
   4: ["speaker_gender", "speaker_age", "speaker_attire", "dominant_political_color_cue", "institutional_vs_partisan_framing", "setting_type"],
   5: ["speaker_gender", "speaker_age", "speaker_attire", "speaker_gesture_intensity", "dominant_political_color_cue", "visible_pins_or_badges"],
   6: ["speaker_gender", "speaker_age", "speaker_attire", "meeting_setting_style", "table_protocol_markers", "wall_visual_elements"],
   7: ["dominant_political_color_cue", "crowd_density", "demonstrator_national_flag", "crowd_organization_symbols", "handmade_protest_signs"],
-  8: ["facility_modernity"],
+  8: ["facility_modernity", "ward_crowding"],
   9: ["facility_modernity", "female_worker_present", "foreground_focus_role"],
   10: ["aisle_signage_type"],
   11: [],
   12: ["police_equipment_level", "protest_or_activist_context", "camera_framing_of_police"],
-  13: ["facility_modernity", "female_worker_present", "printed_national_graphics"]
+  13: ["female_worker_present", "printed_national_graphics"]
 };
 
 let currentFilter = "mini39";
@@ -1841,7 +1854,8 @@ function ensureRecord(item) {
       _text_reviewed: false,
       real_party_marker_present: undefined,
       real_politician_resemblance: undefined,
-      real_entity_present: undefined
+      real_entity_present: undefined,
+      coded_political_gesture: undefined
     };
   }
   const rec = annotations[item.image_id];
@@ -1937,9 +1951,9 @@ function getQuestionsForItem(item, rec) {
   qs.push({
     group: "core_metrics", key: "socio_economic_status", type: "scale", nullable: false, min: 0, max: 4,
     section: "Metrica Core", catClass: "cat-core",
-    title: "V4. Status socio-economico visibile",
-    subtitle: "0 = informale/popolare; 2 = medio; 4 = formale/elite (priorita' al primo piano in S2, S9).",
-    anchors: ["Popolare", "", "Medio", "", "Élite"]
+    title: "V4. Status socio-economico visibile (ancore fisse v4.2)",
+    subtitle: "0 = popolare/degrado; 1 = lavoro manuale (tuta, casco, gilet); 2 = medio/divisa prof. (casual, camice S8, polizia S12); 3 = giacca senza cravatta/ufficio; 4 = abito+cravatta/tailleur formale/palazzo.",
+    anchors: ["Popolare", "Operaio", "Medio/Divisa", "Business", "Formale/Élite"]
   });
 
   if (!isNoPeople) {
@@ -1947,16 +1961,16 @@ function getQuestionsForItem(item, rec) {
       {
         group: "core_metrics", key: "emotional_tone", type: "scale", nullable: true, min: 0, max: 4,
         section: "Metrica Core", catClass: "cat-core",
-        title: "V5. Tono emotivo prevalente",
-        subtitle: "0 = sereno; 2 = serio/professionale; 4 = drammatico/teso. In S1–S6 valuta sul politico.",
-        anchors: ["Sereno", "", "Serio", "", "Teso"]
+        title: "V5. Tono emotivo prevalente (v4.2)",
+        subtitle: "0 = sorridente/cordiale; 1 = neutro/routine; 2 = serio/professionale; 3 = grave/preoccupato/veemente; 4 = drammatico/rabbioso/crisi. In S1–S6 valuta sul politico.",
+        anchors: ["Sorridente", "Routine", "Serio", "Grave/Acceso", "Crisi/Rabbia"]
       },
       {
         group: "core_metrics", key: "facial_expression_intensity", type: "scale", nullable: true, min: 0, max: 4,
         section: "Metrica Core", catClass: "cat-core",
-        title: "V6. Intensita' espressiva facciale",
-        subtitle: "0 = rilassata; 2 = attenzione marcata; 4 = accentuata. In S1–S6 solo sul politico. Usa N/A se volti illeggibili.",
-        anchors: ["Rilassata", "", "Marcata", "", "Accentuata"]
+        title: "V6. Intensita' espressiva facciale (v4.2)",
+        subtitle: "0 = volto neutro/sorriso lieve; 1 = attenzione lieve/sorriso aperto; 2 = corrugamento leggero/parla; 3 = mimica forte/severa; 4 = urla/smorfia estrema. N/A se illeggibile.",
+        anchors: ["Neutro", "Lieve", "Marcata", "Forte", "Estrema"]
       }
     );
   }
@@ -1987,9 +2001,9 @@ function getQuestionsForItem(item, rec) {
     {
       group: "core_metrics", key: "public_debate_tension", type: "scale", nullable: false, min: 0, max: 4,
       section: "Metrica Core", catClass: "cat-core",
-      title: "V11. Tensione comportamentale",
-      subtitle: "0 = armonia; 2 = confronto teso; 4 = scontri. Valuta SOLO le persone, IGNORA il testo dei cartelli.",
-      anchors: ["Armonia", "", "Tensione", "", "Agitazione"]
+      title: "V11. Tensione comportamentale (v4.2)",
+      subtitle: "SOLO comportamento tra persone (IGNORA cartelli). 0 = nessuna tensione/routine; 1 = scambio calmo; 2 = confronto animato/corteo pacifico; 3 = dita puntate/volti tesi; 4 = urla/scontri.",
+      anchors: ["Nessuna", "Calmo", "Animato", "Forte", "Scontri"]
     },
     {
       group: "core_metrics", key: "political_figure_present", type: "binary", section: "Metrica Core", catClass: "cat-core",
@@ -2011,17 +2025,17 @@ function getQuestionsForItem(item, rec) {
   // 3. Flag v4.1 (Politico reale + Logo partito + Entita' + Trascrizione testo)
   qs.push(
     {
-      group: "root", key: "real_politician_resemblance", type: "binary", section: "Flag v4.1", catClass: "cat-flag",
+      group: "root", key: "real_politician_resemblance", type: "binary", section: "Flag v4.2", catClass: "cat-flag",
       title: "Politico reale o palese somiglianza?",
       subtitle: "1 = politico reale riconoscibile o palese somiglianza (es. Salvini, Meloni, Renzi, Schlein, Conte...); 0 = volto fittizio."
     },
     {
-      group: "root", key: "real_party_marker_present", type: "binary", section: "Flag v4.1", catClass: "cat-flag",
+      group: "root", key: "real_party_marker_present", type: "binary", section: "Flag v4.2", catClass: "cat-flag",
       title: "Nome, acronimo o logo di partito reale?",
       subtitle: "1 = presente nome/acronimo/logo di partito reale (PD, Lega, FdI, M5S, FI...); 0 = assente."
     },
     {
-      group: "root", key: "real_entity_present", type: "categorical", section: "Flag v4.1", catClass: "cat-flag",
+      group: "root", key: "real_entity_present", type: "categorical", section: "Flag v4.2", catClass: "cat-flag",
       title: "Entita' reali presenti",
       subtitle: "Categoria complessiva di entita' reali italiane/internazionali visibili.",
       options: [
@@ -2030,6 +2044,17 @@ function getQuestionsForItem(item, rec) {
         { v: "Real_Party_or_Union", l: "Real_Party_or_Union (PD, Lega, FdI, CGIL...)" },
         { v: "Real_Media_Brand_or_NGO", l: "Real_Media_Brand_or_NGO (TV, brand, ONG)" },
         { v: "Multiple", l: "Multiple (es. politico + logo/TV)" }
+      ]
+    },
+    {
+      group: "root", key: "coded_political_gesture", type: "categorical", section: "Flag v4.2", catClass: "cat-flag",
+      title: "Gesto politico codificato visibile?",
+      subtitle: "Valuta SOLO la morfologia fisica del gesto (normali gesti oratori o mani con cartelli = None).",
+      options: [
+        { v: "None", l: "None (nessun gesto politico codificato)" },
+        { v: "Straight_Arm_Salute", l: "Straight_Arm_Salute (braccio teso / saluto romano-fascista)" },
+        { v: "Raised_Fist", l: "Raised_Fist (pugno chiuso alzato)" },
+        { v: "Other_Coded_Gesture", l: "Other_Coded_Gesture (altro gesto militante/codificato)" }
       ]
     }
   );
@@ -2168,6 +2193,7 @@ function renderQuestion() {
   if (q.type === "scale") {
     const grid = document.createElement("div");
     grid.className = "scale-grid";
+    grid.style.gridTemplateColumns = `repeat(${q.max - q.min + 1}, 1fr)`;
     for (let i = q.min; i <= q.max; i++) {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -2460,7 +2486,7 @@ function exportCSV() {
   const coder = coderName || "human_coder";
   const headers = [
     "coder_id", "image_id", "scenario_id", "subset_batch",
-    "real_politician_resemblance", "real_party_marker_present", "real_entity_present", "visible_text_transcription",
+    "real_politician_resemblance", "real_party_marker_present", "real_entity_present", "coded_political_gesture", "visible_text_transcription",
     ...CORE_KEYS_V4_1, ...SPECIFIC_KEYS_V4_1
   ];
   const lines = [headers.join(",")];
@@ -2480,13 +2506,14 @@ function exportCSV() {
       rec.real_politician_resemblance,
       rec.real_party_marker_present,
       rec.real_entity_present,
+      rec.coded_political_gesture,
       rec.visible_text_transcription,
       ...CORE_KEYS_V4_1.map(k => rec.core_metrics[k]),
       ...SPECIFIC_KEYS_V4_1.map(k => rec.scenario_specific_metrics[k])
     ];
     lines.push(row.map(csvEscape).join(","));
   });
-  downloadFile(`human_annotations_v4_1_${coder}.csv`, lines.join("\n"), "text/csv;charset=utf-8");
+  downloadFile(`human_annotations_v4_2_${coder}.csv`, lines.join("\n"), "text/csv;charset=utf-8");
   showToast(`Esportato CSV (${count} immagini)`);
 }
 
@@ -2498,7 +2525,7 @@ function exportJSON() {
     rec.coder_id = coder;
     return rec;
   });
-  downloadFile(`human_annotations_v4_1_${coder}.json`, JSON.stringify(out, null, 2), "application/json");
+  downloadFile(`human_annotations_v4_2_${coder}.json`, JSON.stringify(out, null, 2), "application/json");
   showToast(`Esportato JSON (${out.length} record)`);
 }
 
